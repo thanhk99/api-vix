@@ -76,6 +76,16 @@ public class JwtUtil {
         return claims.get("roles", List.class);
     }
 
+    // Method to get module permissions from token - can be extended later
+    public List<String> extractModulePermissions(String token) {
+        Claims claims = extractAllClaims(token);
+        Object modulePerms = claims.get("modulePermissions");
+        if (modulePerms instanceof List) {
+            return (List<String>) modulePerms;
+        }
+        return List.of();
+    }
+
     private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
