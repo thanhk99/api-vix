@@ -5,7 +5,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vix.local.api.modules.audit.application.service.AuditApplicationService;
+import vix.local.api.modules.permission.application.service.DepartmentPermissionInitService.ScreenPermission;
 import vix.local.api.modules.audit.domain.model.AuditLog;
+import vix.local.api.modules.hr.domain.model.HrDepartment;
+import vix.local.api.modules.hr.domain.repository.HrDepartmentRepository;
 import vix.local.api.modules.identity.domain.repository.UserDepartmentRepository;
 import vix.local.api.modules.identity.domain.repository.UserRepository;
 import vix.local.api.modules.permission.api.v1.dto.request.AssignUsersRequest;
@@ -24,8 +27,11 @@ import vix.local.api.modules.permission.domain.repository.UserRoleGroupRepositor
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import org.springframework.http.HttpStatus;
 
 @Service
 @RequiredArgsConstructor
@@ -37,6 +43,8 @@ public class PermissionApplicationService {
     private final UserRepository userRepository;
     private final UserDepartmentRepository userDepartmentRepository;
     private final AuditApplicationService auditService;
+    private final HrDepartmentRepository hrDepartmentRepository;
+    private final DepartmentPermissionInitService departmentPermissionInitService;
 
     @Transactional(readOnly = true)
     public List<PermissionMetadataResponse> getPermissionMetadata() {
@@ -45,8 +53,41 @@ public class PermissionApplicationService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Lấy danh sách màn hình (screens) và actions được phép của một phòng ban.
+     * Frontend dùng API này để biết phòng ban có những màn hình nào
+     * và trên mỗi màn hình có thể gán những action nào cho role_group.
+     */
+    @Transactional(readOnly = true)
+    public List<PermissionMetadataResponse> getDepartmentScreens(String deptCode) {
+        List<ScreenPermission> screens = departmentPermissionInitService.getScreensForDept(deptCode);
+        if (screens.isEmpty()) {
+            throw new PermissionException(
+                    org.springframework.http.HttpStatus.NOT_FOUND,
+                    "Không tìm thấy cấu hình màn hình cho phòng ban: " + deptCode);
+        }
+        return screens.stream()
+                .map(s -> new PermissionMetadataResponse(s.getResource(), s.getAllowedActions()))
+                .collect(Collectors.toList());
+    }
+
     @Transactional(readOnly = true)
     public List<RoleGroupResponse> getRoleGroups(UUID deptId) {
+        return roleGroupRepository.findByDeptId(deptId).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<RoleGroupResponse> getRoleGroupsByCodeName(String deptCodeName) {
+        // Tìm department theo codeName để lấy ID
+        Optional<HrDepartment> deptOpt = hrDepartmentRepository.findByCode(deptCodeName);
+        if (deptOpt.isEmpty()) {
+            throw new PermissionException(HttpStatus.NOT_FOUND,
+                    "Department with code name '" + deptCodeName + "' not found");
+        }
+
+        UUID deptId = deptOpt.get().getId();
         return roleGroupRepository.findByDeptId(deptId).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -76,9 +117,11 @@ public class PermissionApplicationService {
     }
 
     @Transactional
-    public RoleGroupResponse updateRoleGroup(UUID deptId, UUID id, RoleGroupRequest request) {
-        RoleGroup roleGroup = roleGroupRepository.findById(id)
-                .orElseThrow(() -> PermissionException.roleGroupNotFound(id.toString()));
+    public RoleGroupResponse updateRoleGroup(UUID deptId, String codeName, RoleGroupRequest request) {
+        // Tìm role group theo codeName thay vì ID
+        RoleGroup roleGroup = roleGroupRepository.findByCodeNameAndDeptId(codeName, deptId)
+                .orElseThrow(() -> PermissionException
+                        .roleGroupNotFound("Role group with codeName " + codeName + " not found"));
 
         if (!roleGroup.getDeptId().equals(deptId)) {
             throw PermissionException.unauthorizedAction("Nhóm quyền này không thuộc phòng ban của bạn");
@@ -101,28 +144,32 @@ public class PermissionApplicationService {
     }
 
     @Transactional
-    public void deleteRoleGroup(UUID deptId, UUID id) {
-        RoleGroup roleGroup = roleGroupRepository.findById(id)
-                .orElseThrow(() -> PermissionException.roleGroupNotFound(id.toString()));
+    public void deleteRoleGroup(UUID deptId, String codeName) {
+        // Tìm role group theo codeName thay vì ID
+        RoleGroup roleGroup = roleGroupRepository.findByCodeNameAndDeptId(codeName, deptId)
+                .orElseThrow(() -> PermissionException
+                        .roleGroupNotFound("Role group with codeName " + codeName + " not found"));
 
         if (!roleGroup.getDeptId().equals(deptId)) {
             throw PermissionException.unauthorizedAction("Nhóm quyền này không thuộc phòng ban của bạn");
         }
 
-        if (userRoleGroupRepository.existsByRoleGroupId(id)) {
+        if (userRoleGroupRepository.existsByRoleGroupId(roleGroup.getId())) {
             throw PermissionException.unauthorizedAction("Không thể xóa nhóm quyền đang có nhân viên");
         }
 
-        roleGroupPermissionRepository.deleteByRoleGroupId(id);
-        roleGroupRepository.deleteById(id);
+        roleGroupPermissionRepository.deleteByRoleGroupId(roleGroup.getId());
+        roleGroupRepository.deleteById(roleGroup.getId());
 
         logAction(deptId, "DELETE_ROLE_GROUP", "Xóa nhóm quyền: " + roleGroup.getName());
     }
 
     @Transactional
-    public void assignUsersToRoleGroup(UUID deptId, UUID roleGroupId, AssignUsersRequest request) {
-        RoleGroup roleGroup = roleGroupRepository.findById(roleGroupId)
-                .orElseThrow(() -> PermissionException.roleGroupNotFound(roleGroupId.toString()));
+    public void assignUsersToRoleGroup(UUID deptId, String codeName, AssignUsersRequest request) {
+        // Tìm role group theo codeName thay vì ID
+        RoleGroup roleGroup = roleGroupRepository.findByCodeNameAndDeptId(codeName, deptId)
+                .orElseThrow(() -> PermissionException
+                        .roleGroupNotFound("Role group with codeName " + codeName + " not found"));
 
         if (!roleGroup.getDeptId().equals(deptId)) {
             throw PermissionException.unauthorizedAction("Nhóm quyền này không thuộc phòng ban của bạn");
@@ -133,21 +180,23 @@ public class PermissionApplicationService {
         // Validate if users belong to this department
         for (UUID userId : newUsers) {
             if (!userRepository.findById(userId).isPresent()) {
-                throw new PermissionException(org.springframework.http.HttpStatus.NOT_FOUND, "User not found: " + userId);
+                throw new PermissionException(org.springframework.http.HttpStatus.NOT_FOUND,
+                        "User not found: " + userId);
             }
-            if (userDepartmentRepository.findByUserId(userId).stream().noneMatch(ud -> ud.getDepartmentId().equals(deptId))) {
+            if (userDepartmentRepository.findByUserId(userId).stream()
+                    .noneMatch(ud -> ud.getDepartmentId().equals(deptId))) {
                 throw PermissionException.unauthorizedAction("Nhân viên " + userId + " không thuộc phòng ban này");
             }
         }
 
-        userRoleGroupRepository.deleteByRoleGroupId(roleGroupId);
+        userRoleGroupRepository.deleteByRoleGroupId(roleGroup.getId());
 
         UUID assignedBy = getCurrentUserId();
         if (!newUsers.isEmpty()) {
             List<UserRoleGroup> entities = newUsers.stream()
                     .map(userId -> UserRoleGroup.builder()
                             .userId(userId)
-                            .roleGroupId(roleGroupId)
+                            .roleGroupId(roleGroup.getId())
                             .deptId(deptId)
                             .assignedBy(assignedBy)
                             .build())
@@ -181,6 +230,9 @@ public class PermissionApplicationService {
         res.setActive(roleGroup.isActive());
         res.setCreatedAt(roleGroup.getCreatedAt());
         res.setUpdatedAt(roleGroup.getUpdatedAt());
+
+        // Thêm codeName vào response
+        res.setCodeName(roleGroup.getCodeName());
 
         List<PermissionDto> dtos = roleGroupPermissionRepository.findByRoleGroupId(roleGroup.getId()).stream()
                 .map(p -> {

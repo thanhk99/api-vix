@@ -16,6 +16,9 @@ public class RoleGroupResponse {
     private boolean isActive;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    
+
+    // Thêm codeName để trả về trong response nếu cần thiết
+    private String codeName;
+
     private List<PermissionDto> permissions;
 }

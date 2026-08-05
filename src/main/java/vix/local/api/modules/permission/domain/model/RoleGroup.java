@@ -22,6 +22,9 @@ public class RoleGroup {
     private UUID createdBy;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    
+
+    // Thêm thuộc tính codeName
+    private String codeName;
+
     private List<RoleGroupPermission> permissions;
 }

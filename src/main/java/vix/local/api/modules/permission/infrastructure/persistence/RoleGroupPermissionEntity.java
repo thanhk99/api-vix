@@ -26,7 +26,7 @@ public class RoleGroupPermissionEntity {
     private UUID roleGroupId;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "varchar(255)")
     private ResourceCode resource;
 
     @ElementCollection(fetch = FetchType.EAGER)

@@ -17,6 +17,7 @@ import java.util.UUID;
 public class HrDepartmentApplicationService {
 
     private final HrDepartmentRepository hrDepartmentRepository;
+    private final org.springframework.context.ApplicationEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
     public List<HrDepartment> getAllDepartments() {
@@ -43,7 +44,9 @@ public class HrDepartmentApplicationService {
                 .managerId(request.getManagerId())
                 .build();
 
-        return hrDepartmentRepository.save(department);
+        HrDepartment saved = hrDepartmentRepository.save(department);
+        eventPublisher.publishEvent(new vix.local.api.shared.event.DepartmentCreatedEvent(this, saved.getId(), saved.getCode(), saved.getName()));
+        return saved;
     }
 
     @Transactional

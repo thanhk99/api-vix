@@ -18,7 +18,17 @@ public enum ResourceCode {
     MEETING(List.of(ActionCode.VIEW, ActionCode.CREATE, ActionCode.UPDATE, ActionCode.DELETE, ActionCode.APPROVE)),
     
     // Permission Management
-    MANAGE_ROLE_GROUP(List.of(ActionCode.VIEW, ActionCode.CREATE, ActionCode.UPDATE, ActionCode.DELETE));
+    MANAGE_ROLE_GROUP(List.of(ActionCode.VIEW, ActionCode.CREATE, ActionCode.UPDATE, ActionCode.DELETE)),
+    
+    // Capital Source Module
+    CAPITAL_CONFIG(List.of(ActionCode.VIEW, ActionCode.CREATE, ActionCode.UPDATE, ActionCode.DELETE, ActionCode.APPROVE)),
+    CAPITAL_PARTNER(List.of(ActionCode.VIEW, ActionCode.CREATE, ActionCode.UPDATE, ActionCode.DELETE, ActionCode.APPROVE)),
+    CAPITAL_LIMIT(List.of(ActionCode.VIEW, ActionCode.CREATE, ActionCode.UPDATE, ActionCode.DELETE, ActionCode.APPROVE)),
+    CAPITAL_CONTRACT(List.of(ActionCode.VIEW, ActionCode.CREATE, ActionCode.UPDATE, ActionCode.DELETE, ActionCode.APPROVE)),
+    CAPITAL_REPAYMENT(List.of(ActionCode.VIEW, ActionCode.CREATE, ActionCode.UPDATE, ActionCode.DELETE, ActionCode.APPROVE)),
+    CAPITAL_ASSET(List.of(ActionCode.VIEW, ActionCode.CREATE, ActionCode.UPDATE, ActionCode.DELETE, ActionCode.APPROVE)),
+    CAPITAL_REPORT(List.of(ActionCode.VIEW, ActionCode.EXPORT)),
+    CAPITAL_BATCH(List.of(ActionCode.VIEW));
 
     private final List<ActionCode> allowedActions;
 

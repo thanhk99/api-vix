@@ -9,4 +9,7 @@ public interface RoleGroupJpaRepository extends JpaRepository<RoleGroupEntity, U
     List<RoleGroupEntity> findByDeptId(UUID deptId);
     Optional<RoleGroupEntity> findByNameAndDeptId(String name, UUID deptId);
     boolean existsByNameAndDeptId(String name, UUID deptId);
+
+    // Thêm phương thức tìm theo codeName
+    Optional<RoleGroupEntity> findByCodeNameAndDeptId(String codeName, UUID deptId);
 }

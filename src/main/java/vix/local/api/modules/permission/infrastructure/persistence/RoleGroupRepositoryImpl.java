@@ -44,12 +44,18 @@ public class RoleGroupRepositoryImpl implements RoleGroupRepository {
         jpaRepository.deleteById(id);
     }
 
+    @Override
+    public Optional<RoleGroup> findByCodeNameAndDeptId(String codeName, UUID deptId) {
+        return jpaRepository.findByCodeNameAndDeptId(codeName, deptId).map(this::toDomain);
+    }
+
     private RoleGroup toDomain(RoleGroupEntity entity) {
         if (entity == null) return null;
         return RoleGroup.builder()
                 .id(entity.getId())
                 .deptId(entity.getDeptId())
                 .name(entity.getName())
+                .codeName(entity.getCodeName())  // Thêm codeName
                 .description(entity.getDescription())
                 .isActive(entity.isActive())
                 .createdBy(entity.getCreatedBy())
@@ -64,6 +70,7 @@ public class RoleGroupRepositoryImpl implements RoleGroupRepository {
                 .id(domain.getId())
                 .deptId(domain.getDeptId())
                 .name(domain.getName())
+                .codeName(domain.getCodeName())  // Thêm codeName
                 .description(domain.getDescription())
                 .isActive(domain.isActive())
                 .createdBy(domain.getCreatedBy())

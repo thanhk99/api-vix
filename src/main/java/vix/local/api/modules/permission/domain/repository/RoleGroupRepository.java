@@ -12,4 +12,7 @@ public interface RoleGroupRepository {
     List<RoleGroup> findByDeptId(UUID deptId);
     boolean existsByNameAndDeptId(String name, UUID deptId);
     void deleteById(UUID id);
+
+    // Thêm phương thức tìm theo codeName
+    Optional<RoleGroup> findByCodeNameAndDeptId(String codeName, UUID deptId);
 }

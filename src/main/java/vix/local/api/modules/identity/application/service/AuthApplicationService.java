@@ -14,7 +14,6 @@ import vix.local.api.modules.identity.domain.model.UserDepartment;
 import vix.local.api.modules.identity.domain.model.UserStatus;
 import vix.local.api.modules.identity.domain.repository.UserDepartmentRepository;
 import vix.local.api.modules.identity.domain.repository.UserRepository;
-import vix.local.api.modules.permission.application.service.ModulePermissionService;
 import vix.local.api.modules.hr.domain.model.HrDepartment;
 import vix.local.api.modules.hr.domain.repository.HrDepartmentRepository;
 import vix.local.api.shared.security.JwtUtil;
@@ -33,7 +32,6 @@ public class AuthApplicationService implements AuthPort {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final UserMapper userMapper;
-    private final ModulePermissionService modulePermissionService;
 
     @Transactional(readOnly = true)
     public AuthResponse login(LoginRequest request) {

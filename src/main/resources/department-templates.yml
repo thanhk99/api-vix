@@ -1,0 +1,69 @@
+# =============================================================================
+# DEPARTMENT TEMPLATES - Cấu hình màn hình và chức năng cho từng phòng ban
+# =============================================================================
+# Mỗi phòng ban khai báo:
+#   - screens: danh sách màn hình (resource) mà phòng đó được phép sử dụng
+#   - actions: các thao tác được phép thực hiện trên màn hình đó
+#
+# Đây là "menu" cho phòng ban. HR sẽ tạo role_group và gán quyền
+# từ danh sách này — không thể gán quyền ngoài phạm vi đã định nghĩa.
+#
+# ActionCode hợp lệ: VIEW, CREATE, UPDATE, DELETE, APPROVE, EXPORT
+# ResourceCode: xem ResourceCode.java để biết toàn bộ danh sách màn hình.
+# =============================================================================
+
+departments:
+
+  # ---------------------------------------------------------------------------
+  # PHÒNG NHÂN SỰ (HR)
+  # ---------------------------------------------------------------------------
+  - code: "HR"
+    name: "Phòng Nhân sự"
+    screens:
+      - resource: "HR_USER"
+        actions: [ "VIEW", "CREATE", "UPDATE", "DELETE", "APPROVE" ]
+      - resource: "HR_DEPARTMENT"
+        actions: [ "VIEW", "CREATE", "UPDATE", "DELETE", "APPROVE" ]
+      - resource: "MANAGE_ROLE_GROUP"
+        actions: [ "VIEW", "CREATE", "UPDATE", "DELETE" ]
+      - resource: "AUDIT_LOG"
+        actions: [ "VIEW", "EXPORT" ]
+
+  # ---------------------------------------------------------------------------
+  # PHÒNG TÀI CHÍNH (FINANCE)
+  # ---------------------------------------------------------------------------
+  - code: "FINANCE"
+    name: "Phòng Tài chính"
+    screens:
+      - resource: "PAYROLL"
+        actions: [ "VIEW", "CREATE", "UPDATE", "APPROVE" ]
+      - resource: "CAPITAL_REPORT"
+        actions: [ "VIEW", "EXPORT" ]
+      - resource: "MANAGE_ROLE_GROUP"
+        actions: [ "VIEW", "CREATE", "UPDATE", "DELETE" ]
+
+  # ---------------------------------------------------------------------------
+  # PHÒNG NGUỒN VỐN (NV)
+  # Lưu ý: Báo cáo và Batch chỉ được phép VIEW/EXPORT (không có CRUD)
+  # ---------------------------------------------------------------------------
+  - code: "NV"
+    name: "Phòng Nguồn vốn"
+    screens:
+      - resource: "CAPITAL_CONFIG"
+        actions: [ "VIEW", "CREATE", "UPDATE", "DELETE", "APPROVE" ]
+      - resource: "CAPITAL_PARTNER_LIMIT"
+        actions: [ "VIEW", "CREATE", "UPDATE", "DELETE", "APPROVE" ]
+      - resource: "CAPITAL_CONTRACT"
+        actions: [ "VIEW", "CREATE", "UPDATE", "DELETE", "APPROVE" ]
+      - resource: "CAPITAL_REPAYMENT"
+        actions: [ "VIEW", "CREATE", "UPDATE", "DELETE", "APPROVE" ]
+      - resource: "CAPITAL_ASSET"
+        actions: [ "VIEW", "CREATE", "UPDATE", "DELETE", "APPROVE" ]
+      - resource: "CAPITAL_REPORT"
+        actions: [ "VIEW", "EXPORT" ]
+      - resource: "CAPITAL_BATCH"
+        actions: [ "VIEW" ]
+      - resource: "MANAGE_ROLE_GROUP"
+        actions: [ "VIEW", "CREATE", "UPDATE", "DELETE" ]
+      - resource: "AUDIT_LOG"
+        actions: [ "VIEW", "EXPORT" ]
