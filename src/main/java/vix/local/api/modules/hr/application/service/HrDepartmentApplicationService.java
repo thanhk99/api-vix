@@ -8,6 +8,8 @@ import vix.local.api.modules.hr.domain.model.HrDepartment;
 import vix.local.api.modules.hr.domain.repository.HrDepartmentRepository;
 import vix.local.api.modules.hr.api.v1.dto.request.CreateDepartmentRequest;
 import vix.local.api.modules.hr.api.v1.dto.request.UpdateDepartmentRequest;
+import vix.local.api.modules.identity.domain.model.UserRole;
+import vix.local.api.modules.identity.domain.repository.UserDepartmentRepository;
 
 import java.util.List;
 import java.util.UUID;
@@ -17,6 +19,7 @@ import java.util.UUID;
 public class HrDepartmentApplicationService {
 
     private final HrDepartmentRepository hrDepartmentRepository;
+    private final UserDepartmentRepository userDepartmentRepository;
     private final org.springframework.context.ApplicationEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
@@ -45,6 +48,11 @@ public class HrDepartmentApplicationService {
                 .build();
 
         HrDepartment saved = hrDepartmentRepository.save(department);
+
+        if (request.getManagerId() != null) {
+            userDepartmentRepository.upsert(request.getManagerId(), saved.getId(), UserRole.DEPT_ADMIN, true);
+        }
+
         eventPublisher.publishEvent(new vix.local.api.shared.event.DepartmentCreatedEvent(this, saved.getId(), saved.getCode(), saved.getName()));
         return saved;
     }
@@ -57,12 +65,25 @@ public class HrDepartmentApplicationService {
             throw HrException.badRequest("Mã phòng ban đã tồn tại");
         }
 
+        UUID oldManagerId = department.getManagerId();
+        UUID newManagerId = request.getManagerId();
+
         department.setName(request.getName());
         department.setCode(request.getCode());
         department.setDescription(request.getDescription());
-        department.setManagerId(request.getManagerId());
+        department.setManagerId(newManagerId);
 
-        return hrDepartmentRepository.save(department);
+        HrDepartment saved = hrDepartmentRepository.save(department);
+
+        if (newManagerId != null) {
+            userDepartmentRepository.upsert(newManagerId, saved.getId(), UserRole.DEPT_ADMIN, true);
+        }
+
+        if (oldManagerId != null && !oldManagerId.equals(newManagerId)) {
+            userDepartmentRepository.upsert(oldManagerId, saved.getId(), UserRole.MEMBER, true);
+        }
+
+        return saved;
     }
 
     @Transactional

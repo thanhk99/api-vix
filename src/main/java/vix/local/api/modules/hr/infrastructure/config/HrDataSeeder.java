@@ -15,6 +15,7 @@ import vix.local.api.modules.identity.domain.model.UserRole;
 import vix.local.api.modules.identity.domain.repository.UserDepartmentRepository;
 
 import java.util.List;
+import java.util.UUID;
 
 @Configuration
 @RequiredArgsConstructor
@@ -78,6 +79,28 @@ public class HrDataSeeder implements CommandLineRunner {
 
             // Repair: tạo UserDepartment cho tất cả nhân viên bị thiếu
             repairMissingUserDepartments();
+        }
+
+        // Đồng bộ role DEPT_ADMIN theo managerId của phòng ban
+        repairManagerRoles();
+    }
+
+    private void repairManagerRoles() {
+        int upgraded = 0;
+        for (HrDepartment dept : hrDepartmentRepository.findAll()) {
+            if (dept.getManagerId() == null) continue;
+            UUID managerId = dept.getManagerId();
+            UserDepartment existing = userDepartmentRepository.findByUserId(managerId).stream()
+                    .filter(ud -> ud.getDepartmentId().equals(dept.getId()))
+                    .findFirst()
+                    .orElse(null);
+            if (existing == null || existing.getRole() == UserRole.MEMBER) {
+                userDepartmentRepository.upsert(managerId, dept.getId(), UserRole.DEPT_ADMIN, true);
+                upgraded++;
+            }
+        }
+        if (upgraded > 0) {
+            log.info("Đã đồng bộ role DEPT_ADMIN cho {} trưởng phòng", upgraded);
         }
     }
 

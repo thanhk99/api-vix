@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import vix.local.api.modules.hr.domain.model.Gender;
+import vix.local.api.modules.identity.domain.model.UserRole;
 
 import java.time.LocalDate;
 import java.util.UUID;
@@ -37,4 +38,6 @@ public class CreateEmployeeRequest {
 
     private LocalDate joinDate;
     private String avatarUrl;
+
+    private UserRole role;
 }

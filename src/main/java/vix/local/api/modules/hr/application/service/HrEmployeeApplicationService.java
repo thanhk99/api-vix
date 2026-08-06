@@ -75,14 +75,30 @@ public class HrEmployeeApplicationService {
 
         HrUser savedUser = hrUserRepository.save(newUser);
 
-        // Tự động tạo UserDepartment với role MEMBER để user có thể login
+        UserRole role = request.getRole() != null ? request.getRole() : UserRole.MEMBER;
+        if (role == UserRole.ADMIN || role == UserRole.SUPER_ADMIN) {
+            throw HrException.badRequest("Role không hợp lệ, chỉ cho phép MEMBER hoặc DEPT_ADMIN");
+        }
+
+        // Tự động tạo UserDepartment với role để user có thể login
         UserDepartment userDepartment = UserDepartment.builder()
                 .userId(savedUser.getId())
                 .departmentId(request.getDepartmentId())
-                .role(resolveRole(request))
+                .role(role)
                 .isPrimary(true)
                 .build();
         userDepartmentRepository.save(userDepartment);
+
+        // Nếu role là trưởng phòng thì set managerId cho phòng ban, hạ trưởng phòng cũ xuống MEMBER
+        if (role == UserRole.DEPT_ADMIN) {
+            UUID oldManagerId = department.getManagerId();
+            department.setManagerId(savedUser.getId());
+            hrDepartmentRepository.save(department);
+
+            if (oldManagerId != null && !oldManagerId.equals(savedUser.getId())) {
+                userDepartmentRepository.upsert(oldManagerId, department.getId(), UserRole.MEMBER, true);
+            }
+        }
 
         return savedUser;
     }
@@ -170,10 +186,5 @@ public class HrEmployeeApplicationService {
         HrUser employee = getEmployeeById(employeeId);
         employee.setPasswordHash(passwordEncoder.encode(newPassword));
         return hrUserRepository.save(employee);
-    }
-
-    // Xác định role khi tạo nhân viên: nếu request có field role thì dùng, mặc định là MEMBER
-    private UserRole resolveRole(CreateEmployeeRequest request) {
-        return UserRole.MEMBER;
     }
 }
