@@ -9,6 +9,8 @@ import java.util.UUID;
 public interface UserDepartmentRepository {
     List<UserDepartment> findByUserId(UUID userId);
 
+    java.util.Optional<UserDepartment> findManagerByDepartmentId(UUID departmentId);
+
     UserDepartment save(UserDepartment userDepartment);
 
     // Upsert: update if exists for this user+dept pair, else create

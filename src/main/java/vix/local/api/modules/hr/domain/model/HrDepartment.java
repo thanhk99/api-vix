@@ -16,7 +16,6 @@ public class HrDepartment {
     private UUID id;
     private String name;
     private String code;
-    private UUID managerId;       // Trưởng phòng
     private String description;
     private String status;        // ACTIVE, INACTIVE
     private LocalDateTime createdAt;

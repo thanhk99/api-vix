@@ -13,5 +13,4 @@ public class CreateDepartmentRequest {
     private String code;
 
     private String description;
-    private UUID managerId;
 }

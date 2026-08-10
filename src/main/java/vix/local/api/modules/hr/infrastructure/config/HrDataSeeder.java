@@ -61,10 +61,6 @@ public class HrDataSeeder implements CommandLineRunner {
                     .build();
             userDepartmentRepository.save(ud);
 
-            // 3. Cập nhật trưởng phòng BGD
-            savedBgd.setManagerId(savedDirector.getId());
-            hrDepartmentRepository.save(savedBgd);
-
             log.info("Đã tạo phòng Ban Giám đốc và tài khoản director@vix.local (Mật khẩu: 123456)");
         } else {
             // Check in case director is missing UserDepartment
@@ -79,28 +75,6 @@ public class HrDataSeeder implements CommandLineRunner {
 
             // Repair: tạo UserDepartment cho tất cả nhân viên bị thiếu
             repairMissingUserDepartments();
-        }
-
-        // Đồng bộ role DEPT_ADMIN theo managerId của phòng ban
-        repairManagerRoles();
-    }
-
-    private void repairManagerRoles() {
-        int upgraded = 0;
-        for (HrDepartment dept : hrDepartmentRepository.findAll()) {
-            if (dept.getManagerId() == null) continue;
-            UUID managerId = dept.getManagerId();
-            UserDepartment existing = userDepartmentRepository.findByUserId(managerId).stream()
-                    .filter(ud -> ud.getDepartmentId().equals(dept.getId()))
-                    .findFirst()
-                    .orElse(null);
-            if (existing == null || existing.getRole() == UserRole.MEMBER) {
-                userDepartmentRepository.upsert(managerId, dept.getId(), UserRole.DEPT_ADMIN, true);
-                upgraded++;
-            }
-        }
-        if (upgraded > 0) {
-            log.info("Đã đồng bộ role DEPT_ADMIN cho {} trưởng phòng", upgraded);
         }
     }
 

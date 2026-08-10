@@ -20,6 +20,7 @@ public class HrDepartmentApplicationService {
 
     private final HrDepartmentRepository hrDepartmentRepository;
     private final UserDepartmentRepository userDepartmentRepository;
+    private final vix.local.api.modules.hr.domain.repository.HrUserRepository hrUserRepository;
     private final org.springframework.context.ApplicationEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
@@ -44,14 +45,9 @@ public class HrDepartmentApplicationService {
                 .code(request.getCode())
                 .description(request.getDescription())
                 .status("ACTIVE")
-                .managerId(request.getManagerId())
                 .build();
 
         HrDepartment saved = hrDepartmentRepository.save(department);
-
-        if (request.getManagerId() != null) {
-            userDepartmentRepository.upsert(request.getManagerId(), saved.getId(), UserRole.DEPT_ADMIN, true);
-        }
 
         eventPublisher.publishEvent(new vix.local.api.shared.event.DepartmentCreatedEvent(this, saved.getId(), saved.getCode(), saved.getName()));
         return saved;
@@ -65,25 +61,32 @@ public class HrDepartmentApplicationService {
             throw HrException.badRequest("Mã phòng ban đã tồn tại");
         }
 
-        UUID oldManagerId = department.getManagerId();
-        UUID newManagerId = request.getManagerId();
-
         department.setName(request.getName());
         department.setCode(request.getCode());
         department.setDescription(request.getDescription());
-        department.setManagerId(newManagerId);
 
-        HrDepartment saved = hrDepartmentRepository.save(department);
+        return hrDepartmentRepository.save(department);
+    }
 
-        if (newManagerId != null) {
-            userDepartmentRepository.upsert(newManagerId, saved.getId(), UserRole.DEPT_ADMIN, true);
+    @Transactional
+    public void setManager(UUID departmentId, UUID userId) {
+        HrDepartment department = getDepartmentById(departmentId);
+        vix.local.api.modules.hr.domain.model.HrUser user = hrUserRepository.findById(userId)
+                .orElseThrow(() -> HrException.notFound("Không tìm thấy nhân viên"));
+
+        if (user.getDepartmentId() == null || !user.getDepartmentId().equals(department.getId())) {
+            throw HrException.badRequest("Nhân viên không thuộc phòng ban này");
         }
 
-        if (oldManagerId != null && !oldManagerId.equals(newManagerId)) {
-            userDepartmentRepository.upsert(oldManagerId, saved.getId(), UserRole.MEMBER, true);
-        }
+        // 1. Hạ trưởng phòng cũ xuống MEMBER (nếu có)
+        userDepartmentRepository.findManagerByDepartmentId(department.getId()).ifPresent(oldManager -> {
+            if (!oldManager.getUserId().equals(userId)) {
+                userDepartmentRepository.upsert(oldManager.getUserId(), department.getId(), UserRole.MEMBER, true);
+            }
+        });
 
-        return saved;
+        // 2. Set trưởng phòng mới
+        userDepartmentRepository.upsert(userId, department.getId(), UserRole.DEPT_ADMIN, true);
     }
 
     @Transactional

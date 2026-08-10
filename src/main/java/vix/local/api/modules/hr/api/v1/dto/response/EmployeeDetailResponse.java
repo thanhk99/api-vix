@@ -26,7 +26,14 @@ public class EmployeeDetailResponse {
     private String idCardIssuedPlace;
 
     private UUID departmentId;
+    private String departmentName;
+    private String departmentCode;
+
     private UUID positionId;
+    private String positionName;
+    private String positionCode;
+
+    private vix.local.api.modules.identity.domain.model.UserRole role;
 
     private LocalDate joinDate;
     private LocalDate terminateDate;

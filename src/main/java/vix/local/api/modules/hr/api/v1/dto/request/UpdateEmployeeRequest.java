@@ -3,6 +3,7 @@ package vix.local.api.modules.hr.api.v1.dto.request;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import vix.local.api.modules.hr.domain.model.Gender;
+import vix.local.api.modules.identity.domain.model.UserRole;
 
 import java.time.LocalDate;
 import java.util.UUID;
@@ -23,4 +24,6 @@ public class UpdateEmployeeRequest {
 
     private LocalDate joinDate;
     private String avatarUrl;
+
+    private UserRole role;
 }

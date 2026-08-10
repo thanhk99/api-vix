@@ -25,6 +25,12 @@ public class UserDepartmentRepositoryImpl implements UserDepartmentRepository {
     }
 
     @Override
+    public java.util.Optional<UserDepartment> findManagerByDepartmentId(UUID departmentId) {
+        return jpaRepository.findByDepartmentIdAndRole(departmentId, UserRole.DEPT_ADMIN)
+                .map(this::toDomain);
+    }
+
+    @Override
     public UserDepartment save(UserDepartment userDepartment) {
         UserDepartmentEntity entity = toEntity(userDepartment);
         return toDomain(jpaRepository.save(entity));

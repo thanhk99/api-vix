@@ -21,6 +21,10 @@ import vix.local.api.modules.hr.domain.model.HrUser;
 import vix.local.api.shared.dto.ApiResponse;
 import vix.local.api.shared.dto.PagedResponse;
 
+import vix.local.api.modules.hr.domain.repository.HrDepartmentRepository;
+import vix.local.api.modules.hr.domain.repository.HrPositionRepository;
+import vix.local.api.modules.identity.domain.repository.UserDepartmentRepository;
+
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -32,6 +36,9 @@ import java.util.stream.Collectors;
 public class HrEmployeeController {
 
     private final HrEmployeeApplicationService hrEmployeeService;
+    private final HrDepartmentRepository hrDepartmentRepository;
+    private final HrPositionRepository hrPositionRepository;
+    private final UserDepartmentRepository userDepartmentRepository;
 
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
@@ -124,6 +131,32 @@ public class HrEmployeeController {
     }
 
     private EmployeeDetailResponse toDetailResponse(HrUser user) {
+        String deptName = null;
+        String deptCode = null;
+        if (user.getDepartmentId() != null) {
+            var deptOpt = hrDepartmentRepository.findById(user.getDepartmentId());
+            if (deptOpt.isPresent()) {
+                deptName = deptOpt.get().getName();
+                deptCode = deptOpt.get().getCode();
+            }
+        }
+
+        String posName = null;
+        String posCode = null;
+        if (user.getPositionId() != null) {
+            var posOpt = hrPositionRepository.findById(user.getPositionId());
+            if (posOpt.isPresent()) {
+                posName = posOpt.get().getName();
+                posCode = posOpt.get().getCode();
+            }
+        }
+
+        vix.local.api.modules.identity.domain.model.UserRole role = null;
+        var udList = userDepartmentRepository.findByUserId(user.getId());
+        if (!udList.isEmpty()) {
+            role = udList.get(0).getRole();
+        }
+
         return EmployeeDetailResponse.builder()
                 .id(user.getId())
                 .email(user.getEmail())
@@ -138,7 +171,12 @@ public class HrEmployeeController {
                 .idCardIssuedDate(user.getIdCardIssuedDate())
                 .idCardIssuedPlace(user.getIdCardIssuedPlace())
                 .departmentId(user.getDepartmentId())
+                .departmentName(deptName)
+                .departmentCode(deptCode)
                 .positionId(user.getPositionId())
+                .positionName(posName)
+                .positionCode(posCode)
+                .role(role)
                 .joinDate(user.getJoinDate())
                 .terminateDate(user.getTerminateDate())
                 .avatarUrl(user.getAvatarUrl())
@@ -148,13 +186,44 @@ public class HrEmployeeController {
     }
 
     private EmployeeListItemResponse toListItemResponse(HrUser user) {
+        String deptName = null;
+        String deptCode = null;
+        if (user.getDepartmentId() != null) {
+            var deptOpt = hrDepartmentRepository.findById(user.getDepartmentId());
+            if (deptOpt.isPresent()) {
+                deptName = deptOpt.get().getName();
+                deptCode = deptOpt.get().getCode();
+            }
+        }
+
+        String posName = null;
+        String posCode = null;
+        if (user.getPositionId() != null) {
+            var posOpt = hrPositionRepository.findById(user.getPositionId());
+            if (posOpt.isPresent()) {
+                posName = posOpt.get().getName();
+                posCode = posOpt.get().getCode();
+            }
+        }
+
+        vix.local.api.modules.identity.domain.model.UserRole role = null;
+        var udList = userDepartmentRepository.findByUserId(user.getId());
+        if (!udList.isEmpty()) {
+            role = udList.get(0).getRole();
+        }
+
         return EmployeeListItemResponse.builder()
                 .id(user.getId())
                 .email(user.getEmail())
                 .fullName(user.getFullName())
                 .employeeCode(user.getEmployeeCode())
                 .departmentId(user.getDepartmentId())
+                .departmentName(deptName)
+                .departmentCode(deptCode)
                 .positionId(user.getPositionId())
+                .positionName(posName)
+                .positionCode(posCode)
+                .role(role)
                 .status(user.getStatus())
                 .avatarUrl(user.getAvatarUrl())
                 .build();

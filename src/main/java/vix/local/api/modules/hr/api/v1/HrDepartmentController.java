@@ -8,13 +8,19 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import vix.local.api.modules.hr.api.v1.dto.request.CreateDepartmentRequest;
+import vix.local.api.modules.hr.api.v1.dto.request.SetManagerRequest;
 import vix.local.api.modules.hr.api.v1.dto.request.UpdateDepartmentRequest;
 import vix.local.api.modules.hr.api.v1.dto.response.DepartmentResponse;
 import vix.local.api.modules.hr.application.service.HrDepartmentApplicationService;
 import vix.local.api.modules.hr.domain.model.HrDepartment;
+import vix.local.api.modules.hr.domain.model.HrUser;
+import vix.local.api.modules.hr.domain.repository.HrUserRepository;
+import vix.local.api.modules.identity.domain.model.UserDepartment;
+import vix.local.api.modules.identity.domain.repository.UserDepartmentRepository;
 import vix.local.api.shared.dto.ApiResponse;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -25,6 +31,8 @@ import java.util.stream.Collectors;
 public class HrDepartmentController {
 
     private final HrDepartmentApplicationService hrDepartmentService;
+    private final UserDepartmentRepository userDepartmentRepository;
+    private final HrUserRepository hrUserRepository;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
@@ -61,6 +69,16 @@ public class HrDepartmentController {
         return ResponseEntity.ok(ApiResponse.success(toResponse(dept)));
     }
 
+    @PatchMapping("/{id}/set-manager")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @Operation(summary = "Thiết lập trưởng phòng cho phòng ban")
+    public ResponseEntity<ApiResponse<DepartmentResponse>> setManager(
+            @PathVariable UUID id,
+            @Valid @RequestBody SetManagerRequest request) {
+        hrDepartmentService.setManager(id, request.getManagerId());
+        return ResponseEntity.ok(ApiResponse.success(toResponse(hrDepartmentService.getDepartmentById(id))));
+    }
+
     @PatchMapping("/{id}/deactivate")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     @Operation(summary = "Vô hiệu hóa phòng ban")
@@ -70,11 +88,27 @@ public class HrDepartmentController {
     }
 
     private DepartmentResponse toResponse(HrDepartment domain) {
+        UUID managerId = null;
+        String managerName = null;
+        String managerCode = null;
+
+        Optional<UserDepartment> managerUdOpt = userDepartmentRepository.findManagerByDepartmentId(domain.getId());
+        if (managerUdOpt.isPresent()) {
+            managerId = managerUdOpt.get().getUserId();
+            Optional<HrUser> managerUserOpt = hrUserRepository.findById(managerId);
+            if (managerUserOpt.isPresent()) {
+                managerName = managerUserOpt.get().getFullName();
+                managerCode = managerUserOpt.get().getEmployeeCode();
+            }
+        }
+
         return DepartmentResponse.builder()
                 .id(domain.getId())
                 .name(domain.getName())
                 .code(domain.getCode())
-                .managerId(domain.getManagerId())
+                .managerId(managerId)
+                .managerName(managerName)
+                .managerCode(managerCode)
                 .description(domain.getDescription())
                 .status(domain.getStatus())
                 .createdAt(domain.getCreatedAt())

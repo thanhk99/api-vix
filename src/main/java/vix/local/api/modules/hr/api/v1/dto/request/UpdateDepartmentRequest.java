@@ -13,5 +13,4 @@ public class UpdateDepartmentRequest {
     private String code;
 
     private String description;
-    private UUID managerId;
 }

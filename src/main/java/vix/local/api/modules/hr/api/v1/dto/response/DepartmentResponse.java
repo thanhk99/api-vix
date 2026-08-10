@@ -13,6 +13,8 @@ public class DepartmentResponse {
     private String name;
     private String code;
     private UUID managerId;
+    private String managerName;
+    private String managerCode;
     private String description;
     private String status;
     private LocalDateTime createdAt;

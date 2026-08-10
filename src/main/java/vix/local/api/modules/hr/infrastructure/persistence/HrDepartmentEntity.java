@@ -26,8 +26,6 @@ public class HrDepartmentEntity {
     @Column(nullable = false, unique = true)
     private String code;
 
-    private UUID managerId;
-
     @Column(columnDefinition = "TEXT")
     private String description;
 

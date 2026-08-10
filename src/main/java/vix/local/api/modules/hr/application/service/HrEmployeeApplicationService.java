@@ -80,6 +80,15 @@ public class HrEmployeeApplicationService {
             throw HrException.badRequest("Role không hợp lệ, chỉ cho phép MEMBER hoặc DEPT_ADMIN");
         }
 
+        // Nếu role là trưởng phòng thì hạ trưởng phòng cũ xuống MEMBER (nếu có)
+        if (role == UserRole.DEPT_ADMIN) {
+            userDepartmentRepository.findManagerByDepartmentId(request.getDepartmentId()).ifPresent(oldManager -> {
+                if (!oldManager.getUserId().equals(savedUser.getId())) {
+                    userDepartmentRepository.upsert(oldManager.getUserId(), request.getDepartmentId(), UserRole.MEMBER, true);
+                }
+            });
+        }
+
         // Tự động tạo UserDepartment với role để user có thể login
         UserDepartment userDepartment = UserDepartment.builder()
                 .userId(savedUser.getId())
@@ -88,17 +97,6 @@ public class HrEmployeeApplicationService {
                 .isPrimary(true)
                 .build();
         userDepartmentRepository.save(userDepartment);
-
-        // Nếu role là trưởng phòng thì set managerId cho phòng ban, hạ trưởng phòng cũ xuống MEMBER
-        if (role == UserRole.DEPT_ADMIN) {
-            UUID oldManagerId = department.getManagerId();
-            department.setManagerId(savedUser.getId());
-            hrDepartmentRepository.save(department);
-
-            if (oldManagerId != null && !oldManagerId.equals(savedUser.getId())) {
-                userDepartmentRepository.upsert(oldManagerId, department.getId(), UserRole.MEMBER, true);
-            }
-        }
 
         return savedUser;
     }
@@ -140,6 +138,21 @@ public class HrEmployeeApplicationService {
         employee.setIdCardIssuedPlace(request.getIdCardIssuedPlace());
         employee.setJoinDate(request.getJoinDate());
         employee.setAvatarUrl(request.getAvatarUrl());
+
+        if (request.getRole() != null && employee.getDepartmentId() != null) {
+            UserRole newRole = request.getRole();
+            if (newRole == UserRole.ADMIN || newRole == UserRole.SUPER_ADMIN) {
+                throw HrException.badRequest("Role không hợp lệ, chỉ cho phép MEMBER hoặc DEPT_ADMIN");
+            }
+            if (newRole == UserRole.DEPT_ADMIN) {
+                userDepartmentRepository.findManagerByDepartmentId(employee.getDepartmentId()).ifPresent(oldManager -> {
+                    if (!oldManager.getUserId().equals(employee.getId())) {
+                        userDepartmentRepository.upsert(oldManager.getUserId(), employee.getDepartmentId(), UserRole.MEMBER, true);
+                    }
+                });
+            }
+            userDepartmentRepository.upsert(employee.getId(), employee.getDepartmentId(), newRole, true);
+        }
 
         return hrUserRepository.save(employee);
     }

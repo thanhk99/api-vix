@@ -10,5 +10,7 @@ public interface UserDepartmentJpaRepository extends JpaRepository<UserDepartmen
 
     Optional<UserDepartmentEntity> findByUserIdAndDepartmentId(UUID userId, UUID departmentId);
 
+    Optional<UserDepartmentEntity> findByDepartmentIdAndRole(UUID departmentId, vix.local.api.modules.identity.domain.model.UserRole role);
+
     void deleteByUserId(UUID userId);
 }
