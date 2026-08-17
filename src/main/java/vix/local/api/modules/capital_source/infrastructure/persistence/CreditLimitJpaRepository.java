@@ -34,4 +34,6 @@ public interface CreditLimitJpaRepository extends JpaRepository<CreditLimitEntit
                      Pageable pageable);
 
        java.util.List<CreditLimitEntity> findByParentIdInAndStatusNot(java.util.List<UUID> parentIds, String status);
+
+       java.util.List<CreditLimitEntity> findByPartnerIdAndStatus(UUID partnerId, String status);
 }

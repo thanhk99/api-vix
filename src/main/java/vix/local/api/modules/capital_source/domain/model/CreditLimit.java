@@ -16,6 +16,7 @@ import java.util.UUID;
 public class CreditLimit {
     public static final String STATUS_PENDING_APPROVAL = "PENDING_APPROVAL";
     public static final String STATUS_APPROVED = "APPROVED";
+    public static final String STATUS_REJECTED = "REJECTED";
     public static final String STATUS_DELETED = "DELETED";
 
     private UUID id;
@@ -98,6 +99,21 @@ public class CreditLimit {
             throw new CreditLimitException("Hạn mức đã được xoá");
         }
         this.status = STATUS_DELETED;
+    }
+    
+    public void markAsRejected(UUID rejecterId) {
+        if (STATUS_DELETED.equals(this.status)) {
+            throw new CreditLimitException("Không thể từ chối hạn mức đã xoá");
+        }
+        if (STATUS_REJECTED.equals(this.status)) {
+            throw new CreditLimitException("Hạn mức đã bị từ chối");
+        }
+        if (STATUS_APPROVED.equals(this.status)) {
+            throw new CreditLimitException("Hạn mức đã được duyệt");
+        }
+        this.status = STATUS_REJECTED;
+        this.approvedBy = rejecterId; // Ghi nhận người từ chối vào cột này
+        this.approvedAt = LocalDateTime.now();
     }
     
     public void resetToPending() {

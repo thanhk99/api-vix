@@ -21,4 +21,7 @@ public interface CreditLimitRepository {
     java.util.List<CreditLimit> findByParentIdIn(java.util.List<UUID> parentIds);
     void deleteById(UUID id);
     CreditLimit findById(UUID id);
+    
+    java.util.List<CreditLimit> saveAll(java.util.List<CreditLimit> creditLimits);
+    java.util.List<CreditLimit> findByPartnerIdAndStatus(UUID partnerId, String status);
 }

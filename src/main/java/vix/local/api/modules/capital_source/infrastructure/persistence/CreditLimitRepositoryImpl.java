@@ -60,6 +60,20 @@ public class CreditLimitRepositoryImpl implements CreditLimitRepository {
         return convertToModel(creditLimitJpaRepository.findById(id).orElse(null));
     }
 
+    @Override
+    public java.util.List<CreditLimit> saveAll(java.util.List<CreditLimit> creditLimits) {
+        if (creditLimits == null || creditLimits.isEmpty()) return java.util.Collections.emptyList();
+        java.util.List<CreditLimitEntity> entities = creditLimits.stream().map(this::convertToEntity).toList();
+        return creditLimitJpaRepository.saveAll(entities).stream().map(this::convertToModel).toList();
+    }
+
+    @Override
+    public java.util.List<CreditLimit> findByPartnerIdAndStatus(UUID partnerId, String status) {
+        return creditLimitJpaRepository.findByPartnerIdAndStatus(partnerId, status).stream()
+                .map(this::convertToModel)
+                .toList();
+    }
+
     private CreditLimitEntity convertToEntity(CreditLimit creditLimit) {
         CreditLimitEntity entity = CreditLimitEntity.builder()
                 .id(creditLimit.getId())

@@ -120,4 +120,38 @@ public class GlobalCreditLimitController {
                 
         return ResponseEntity.ok(ApiResponse.success(pagedResponse));
     }
+
+    @PutMapping("/{limitId}/approve")
+    @RequireDeptPermission(resource = ResourceCode.CAPITAL_LIMIT, action = ActionCode.APPROVE)
+    @Operation(summary = "Phê duyệt toàn bộ hạn mức của đối tác thông qua 1 hạn mức")
+    public ResponseEntity<ApiResponse<CreditLimitResponseDto>> approveCreditLimit(
+            @PathVariable UUID limitId,
+            org.springframework.security.core.Authentication auth) {
+        
+        UUID approverId = null;
+        if (auth != null && auth.getName() != null) {
+            approverId = userRepository.findByEmail(auth.getName()).map(User::getId).orElse(null);
+        }
+        
+        CreditLimit approved = partnerService.approveCreditLimit(null, limitId, approverId);
+        Map<UUID, String> userNames = getAllUserNames();
+        return ResponseEntity.ok(ApiResponse.success(mapToDto(approved, userNames, null)));
+    }
+
+    @PutMapping("/{limitId}/reject")
+    @RequireDeptPermission(resource = ResourceCode.CAPITAL_LIMIT, action = ActionCode.APPROVE)
+    @Operation(summary = "Từ chối toàn bộ hạn mức của đối tác thông qua 1 hạn mức")
+    public ResponseEntity<ApiResponse<CreditLimitResponseDto>> rejectCreditLimit(
+            @PathVariable UUID limitId,
+            org.springframework.security.core.Authentication auth) {
+        
+        UUID rejecterId = null;
+        if (auth != null && auth.getName() != null) {
+            rejecterId = userRepository.findByEmail(auth.getName()).map(User::getId).orElse(null);
+        }
+        
+        CreditLimit rejected = partnerService.rejectCreditLimit(null, limitId, rejecterId);
+        Map<UUID, String> userNames = getAllUserNames();
+        return ResponseEntity.ok(ApiResponse.success(mapToDto(rejected, userNames, null)));
+    }
 }

@@ -41,6 +41,7 @@ public class Partner {
 
     public static final String STATUS_PENDING_APPROVAL = "PENDING_APPROVAL";
     public static final String STATUS_APPROVED = "APPROVED";
+    public static final String STATUS_REJECTED = "REJECTED";
     public static final String STATUS_DELETED = "DELETED";
 
     private String status;
@@ -113,6 +114,21 @@ public class Partner {
         }
         this.status = STATUS_APPROVED;
         this.approvedBy = approverId;
+        this.approvedAt = java.time.LocalDateTime.now();
+    }
+    
+    public void markAsRejected(UUID rejecterId) {
+        if (STATUS_DELETED.equals(this.status)) {
+            throw new PartnerException("Không thể từ chối đối tác đã xoá");
+        }
+        if (STATUS_REJECTED.equals(this.status)) {
+            throw new PartnerException("Đối tác đã bị từ chối");
+        }
+        if (STATUS_APPROVED.equals(this.status)) {
+            throw new PartnerException("Đối tác đã được duyệt");
+        }
+        this.status = STATUS_REJECTED;
+        this.approvedBy = rejecterId;
         this.approvedAt = java.time.LocalDateTime.now();
     }
     

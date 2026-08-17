@@ -396,14 +396,62 @@ public class PartnerApplicationService {
         creditLimitRepository.save(creditLimit);
     }
     
-    public CreditLimit approveCreditLimit(UUID partnerId, UUID limitId, UUID approverId) {
-        CreditLimit creditLimit = creditLimitRepository.findById(limitId);
-        if (creditLimit == null || !creditLimit.getPartnerId().equals(partnerId)) {
-            throw new vix.local.api.modules.capital_source.domain.exception.CreditLimitException("Không tìm thấy hạn mức");
+    public void approveAllCreditLimitsByPartner(UUID partnerId, UUID approverId) {
+        Partner partner = partnerRepository.findById(partnerId);
+        if (partner == null) {
+            throw new vix.local.api.modules.capital_source.domain.exception.PartnerException("Không tìm thấy đối tác");
         }
         
-        creditLimit.markAsApproved(approverId);
-        return creditLimitRepository.save(creditLimit);
+        if (Partner.STATUS_PENDING_APPROVAL.equals(partner.getStatus())) {
+            partner.markAsApproved(approverId);
+            partnerRepository.save(partner);
+        }
+        
+        List<CreditLimit> pendingLimits = creditLimitRepository.findByPartnerIdAndStatus(partnerId, CreditLimit.STATUS_PENDING_APPROVAL);
+        if (pendingLimits != null && !pendingLimits.isEmpty()) {
+            for (CreditLimit limit : pendingLimits) {
+                limit.markAsApproved(approverId);
+            }
+            creditLimitRepository.saveAll(pendingLimits);
+        }
+    }
+    
+    public void rejectAllCreditLimitsByPartner(UUID partnerId, UUID rejecterId) {
+        Partner partner = partnerRepository.findById(partnerId);
+        if (partner == null) {
+            throw new vix.local.api.modules.capital_source.domain.exception.PartnerException("Không tìm thấy đối tác");
+        }
+        
+        if (Partner.STATUS_PENDING_APPROVAL.equals(partner.getStatus())) {
+            partner.markAsRejected(rejecterId);
+            partnerRepository.save(partner);
+        }
+        
+        List<CreditLimit> pendingLimits = creditLimitRepository.findByPartnerIdAndStatus(partnerId, CreditLimit.STATUS_PENDING_APPROVAL);
+        if (pendingLimits != null && !pendingLimits.isEmpty()) {
+            for (CreditLimit limit : pendingLimits) {
+                limit.markAsRejected(rejecterId);
+            }
+            creditLimitRepository.saveAll(pendingLimits);
+        }
+    }
+
+    public CreditLimit approveCreditLimit(UUID partnerId, UUID limitId, UUID approverId) {
+        CreditLimit creditLimit = creditLimitRepository.findById(limitId);
+        if (creditLimit == null || (partnerId != null && !creditLimit.getPartnerId().equals(partnerId))) {
+            throw new vix.local.api.modules.capital_source.domain.exception.CreditLimitException("Không tìm thấy hạn mức");
+        }
+        approveAllCreditLimitsByPartner(creditLimit.getPartnerId(), approverId);
+        return creditLimitRepository.findById(limitId);
+    }
+    
+    public CreditLimit rejectCreditLimit(UUID partnerId, UUID limitId, UUID rejecterId) {
+        CreditLimit creditLimit = creditLimitRepository.findById(limitId);
+        if (creditLimit == null || (partnerId != null && !creditLimit.getPartnerId().equals(partnerId))) {
+            throw new vix.local.api.modules.capital_source.domain.exception.CreditLimitException("Không tìm thấy hạn mức");
+        }
+        rejectAllCreditLimitsByPartner(creditLimit.getPartnerId(), rejecterId);
+        return creditLimitRepository.findById(limitId);
     }
 
     public org.springframework.data.domain.Page<CreditLimit> getCreditLimitsByPartnerId(UUID partnerId, org.springframework.data.domain.Pageable pageable) {

@@ -133,7 +133,7 @@ public class CreditLimitController {
 
     @PutMapping("/{limitId}/approve")
     @RequireDeptPermission(resource = ResourceCode.CAPITAL_LIMIT, action = ActionCode.APPROVE)
-    @Operation(summary = "Phê duyệt hạn mức tín dụng")
+    @Operation(summary = "Phê duyệt toàn bộ hạn mức tín dụng của đối tác")
     public ResponseEntity<ApiResponse<CreditLimitResponseDto>> approveCreditLimit(
             @PathVariable UUID partnerId,
             @PathVariable UUID limitId,
@@ -147,6 +147,24 @@ public class CreditLimitController {
         CreditLimit approved = partnerService.approveCreditLimit(partnerId, limitId, approverId);
         Map<UUID, String> userNames = getAllUserNames();
         return ResponseEntity.ok(ApiResponse.success(mapToDto(approved, userNames)));
+    }
+
+    @PutMapping("/{limitId}/reject")
+    @RequireDeptPermission(resource = ResourceCode.CAPITAL_LIMIT, action = ActionCode.APPROVE)
+    @Operation(summary = "Từ chối toàn bộ hạn mức tín dụng của đối tác")
+    public ResponseEntity<ApiResponse<CreditLimitResponseDto>> rejectCreditLimit(
+            @PathVariable UUID partnerId,
+            @PathVariable UUID limitId,
+            org.springframework.security.core.Authentication auth) {
+        
+        UUID rejecterId = null;
+        if (auth != null && auth.getName() != null) {
+            rejecterId = userRepository.findByEmail(auth.getName()).map(User::getId).orElse(null);
+        }
+        
+        CreditLimit rejected = partnerService.rejectCreditLimit(partnerId, limitId, rejecterId);
+        Map<UUID, String> userNames = getAllUserNames();
+        return ResponseEntity.ok(ApiResponse.success(mapToDto(rejected, userNames)));
     }
 
     @PostMapping("/{limitId}/transactions/increase")
