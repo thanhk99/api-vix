@@ -70,6 +70,12 @@ public class JwtUtil {
         return claims.get("schemaTarget", String.class);
     }
 
+    public UUID extractDeptId(String token) {
+        Claims claims = extractAllClaims(token);
+        String deptIdStr = claims.get("deptId", String.class);
+        return deptIdStr != null ? UUID.fromString(deptIdStr) : null;
+    }
+
     @SuppressWarnings("unchecked")
     public List<String> extractRoles(String token) {
         Claims claims = extractAllClaims(token);

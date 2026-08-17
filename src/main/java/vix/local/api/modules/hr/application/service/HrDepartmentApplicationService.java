@@ -8,8 +8,7 @@ import vix.local.api.modules.hr.domain.model.HrDepartment;
 import vix.local.api.modules.hr.domain.repository.HrDepartmentRepository;
 import vix.local.api.modules.hr.api.v1.dto.request.CreateDepartmentRequest;
 import vix.local.api.modules.hr.api.v1.dto.request.UpdateDepartmentRequest;
-import vix.local.api.modules.identity.domain.model.UserRole;
-import vix.local.api.modules.identity.domain.repository.UserDepartmentRepository;
+import vix.local.api.modules.identity.application.port.IdentityPort;
 
 import java.util.List;
 import java.util.UUID;
@@ -19,7 +18,7 @@ import java.util.UUID;
 public class HrDepartmentApplicationService {
 
     private final HrDepartmentRepository hrDepartmentRepository;
-    private final UserDepartmentRepository userDepartmentRepository;
+    private final IdentityPort identityPort;
     private final vix.local.api.modules.hr.domain.repository.HrUserRepository hrUserRepository;
     private final org.springframework.context.ApplicationEventPublisher eventPublisher;
 
@@ -79,14 +78,10 @@ public class HrDepartmentApplicationService {
         }
 
         // 1. Hạ trưởng phòng cũ xuống MEMBER (nếu có)
-        userDepartmentRepository.findManagerByDepartmentId(department.getId()).ifPresent(oldManager -> {
-            if (!oldManager.getUserId().equals(userId)) {
-                userDepartmentRepository.upsert(oldManager.getUserId(), department.getId(), UserRole.MEMBER, true);
-            }
-        });
+        identityPort.demoteOldManager(department.getId(), userId);
 
         // 2. Set trưởng phòng mới
-        userDepartmentRepository.upsert(userId, department.getId(), UserRole.DEPT_ADMIN, true);
+        identityPort.upsertUserRole(userId, department.getId(), vix.local.api.modules.identity.domain.model.UserRole.DEPT_ADMIN, true);
     }
 
     @Transactional

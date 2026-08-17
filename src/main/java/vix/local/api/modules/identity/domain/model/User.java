@@ -21,6 +21,10 @@ public class User {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    private UUID departmentId;
+    private UserRole departmentRole;
+    private UUID roleGroupId;
+
     public static User createNew(String email, String fullName, String passwordHash) {
         return User.builder()
                 .email(email)

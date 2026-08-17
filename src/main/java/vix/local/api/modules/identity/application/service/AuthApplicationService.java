@@ -10,9 +10,8 @@ import vix.local.api.modules.identity.application.mapper.UserMapper;
 import vix.local.api.modules.identity.application.port.AuthPort;
 import vix.local.api.modules.identity.domain.exception.IdentityException;
 import vix.local.api.modules.identity.domain.model.User;
-import vix.local.api.modules.identity.domain.model.UserDepartment;
+import vix.local.api.modules.identity.domain.model.UserRole;
 import vix.local.api.modules.identity.domain.model.UserStatus;
-import vix.local.api.modules.identity.domain.repository.UserDepartmentRepository;
 import vix.local.api.modules.identity.domain.repository.UserRepository;
 import vix.local.api.modules.hr.domain.model.HrDepartment;
 import vix.local.api.modules.hr.domain.repository.HrDepartmentRepository;
@@ -20,14 +19,13 @@ import vix.local.api.shared.security.JwtUtil;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
 
 @Service
 @RequiredArgsConstructor
 public class AuthApplicationService implements AuthPort {
 
     private final UserRepository userRepository;
-    private final UserDepartmentRepository userDepartmentRepository;
     private final HrDepartmentRepository hrDepartmentRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
@@ -46,53 +44,58 @@ public class AuthApplicationService implements AuthPort {
             throw IdentityException.unauthorized("Tài khoản đã bị khóa hoặc chưa kích hoạt");
         }
 
-        List<UserDepartment> userDepts = userDepartmentRepository.findByUserId(user.getId());
-
-        List<AuthResponse.DepartmentInfo> deptInfos = userDepts.stream().map(ud -> {
-            HrDepartment hrDept = hrDepartmentRepository.findById(ud.getDepartmentId()).orElse(null);
-            if (hrDept == null)
-                return null;
-            return AuthResponse.DepartmentInfo.builder()
-                    .deptId(hrDept.getId())
-                    .deptName(hrDept.getName())
-                    .deptCode(hrDept.getCode())
-                    .schemaTarget("shared")
-                    .build();
-        }).filter(d -> d != null).collect(Collectors.toList());
-
+        List<AuthResponse.DepartmentInfo> deptInfos = new ArrayList<>();
         String token = null;
         String route = null;
+        
+        List<String> roles = new ArrayList<>();
+        if (user.getDepartmentRole() != null) {
+            roles.add(user.getDepartmentRole().name());
+        }
 
-        List<String> roles = userDepts.stream().map(d -> d.getRole().name()).collect(Collectors.toList());
-
-        if (deptInfos.size() == 1) {
-            AuthResponse.DepartmentInfo dept = deptInfos.get(0);
-            token = jwtUtil.generateAccessToken(user.getId(), user.getEmail(), roles, dept.getDeptId(),
-                    dept.getSchemaTarget());
-            route = dept.getDeptCode().toLowerCase();
-        } else if (deptInfos.isEmpty() && hasGlobalSuperAdminRole(roles)) {
-            token = jwtUtil.generateAccessToken(user.getId(), user.getEmail(), List.of("SUPER_ADMIN"), null, "shared");
+        if (user.getDepartmentRole() == UserRole.DIRECTOR) {
+            // Giám đốc: không gắn phòng ban cụ thể, token không có deptId
+            token = jwtUtil.generateAccessToken(user.getId(), user.getEmail(), roles, null, "shared");
+            route = "director";
+        } else if (user.getDepartmentId() != null) {
+            HrDepartment hrDept = hrDepartmentRepository.findById(user.getDepartmentId()).orElse(null);
+            if (hrDept != null) {
+                AuthResponse.DepartmentInfo deptInfo = AuthResponse.DepartmentInfo.builder()
+                        .deptId(hrDept.getId())
+                        .deptName(hrDept.getName())
+                        .deptCode(hrDept.getCode())
+                        .schemaTarget("shared")
+                        .build();
+                deptInfos.add(deptInfo);
+                
+                token = jwtUtil.generateAccessToken(user.getId(), user.getEmail(), roles, deptInfo.getDeptId(), deptInfo.getSchemaTarget());
+                route = deptInfo.getDeptCode().toLowerCase();
+            }
         }
 
         return AuthResponse.builder()
                 .accessToken(token)
                 .refreshToken(jwtUtil.generateRefreshToken(user.getEmail()))
-                .user(userMapper.toUserInfo(user, deptInfos.size() == 1 ? deptInfos.get(0).getDeptId() : null,
-                        userDepts))
-                .departments(deptInfos.size() > 1 ? deptInfos : null)
+                .user(userMapper.toUserInfo(user))
+                .departments(deptInfos.isEmpty() ? null : deptInfos) // Trả về nếu có để FE tương thích
                 .route(route)
                 .build();
     }
 
     public AuthResponse selectDepartment(String email, UUID deptId) {
+        // Method này giờ có thể không cần thiết nữa vì 1 user chỉ có 1 phòng ban,
+        // Nhưng cứ implement để giữ api contract
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> IdentityException.unauthorized("Email hoặc mật khẩu không đúng"));
 
-        List<UserDepartment> userDepts = userDepartmentRepository.findByUserId(user.getId());
-        boolean hasAccess = userDepts.stream().anyMatch(ud -> ud.getDepartmentId().equals(deptId));
-        List<String> roles = userDepts.stream().map(d -> d.getRole().name()).collect(Collectors.toList());
+        boolean hasAccess = deptId.equals(user.getDepartmentId());
+        
+        List<String> roles = new ArrayList<>();
+        if (user.getDepartmentRole() != null) {
+            roles.add(user.getDepartmentRole().name());
+        }
 
-        if (!hasAccess && !hasGlobalSuperAdminRole(roles)) {
+        if (!hasAccess) {
             throw IdentityException.unauthorized("Không có quyền truy cập phòng ban này");
         }
 
@@ -104,21 +107,21 @@ public class AuthApplicationService implements AuthPort {
 
         return AuthResponse.builder()
                 .accessToken(token)
-                .user(userMapper.toUserInfo(user, deptId, userDepts))
+                .user(userMapper.toUserInfo(user))
                 .route(hrDept.getCode().toLowerCase())
                 .build();
     }
 
-    private boolean hasGlobalSuperAdminRole(List<String> roles) {
-        return roles.contains("SUPER_ADMIN");
+    public AuthResponse.UserInfo getCurrentUser(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> IdentityException.unauthorized("User không tồn tại"));
+        return userMapper.toUserInfo(user);
     }
-
     @Override
     @Transactional(readOnly = true)
     public boolean hasRole(String email, String role) {
         return userRepository.findByEmail(email)
-                .map(u -> userDepartmentRepository.findByUserId(u.getId()).stream()
-                        .anyMatch(d -> d.getRole().name().equals(role)))
+                .map(u -> u.getDepartmentRole() != null && u.getDepartmentRole().name().equals(role))
                 .orElse(false);
     }
 }

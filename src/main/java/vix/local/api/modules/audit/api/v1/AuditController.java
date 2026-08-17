@@ -33,6 +33,16 @@ public class AuditController {
         return ResponseEntity.ok(ApiResponse.success(logs));
     }
 
+    @GetMapping("/me")
+    @Operation(summary = "Lấy Audit Log cá nhân", description = "Lấy danh sách thao tác của người dùng hiện tại")
+    public ResponseEntity<ApiResponse<List<AuditLogResponse>>> getMyLogs(java.security.Principal principal) {
+        String email = principal.getName();
+        List<AuditLogResponse> logs = auditService.getLogsByPerformedBy(email).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.success(logs));
+    }
+
     private AuditLogResponse toResponse(AuditLog log) {
         return AuditLogResponse.builder()
                 .id(log.getId())

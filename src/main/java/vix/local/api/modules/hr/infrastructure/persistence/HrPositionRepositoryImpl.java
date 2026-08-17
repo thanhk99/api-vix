@@ -32,6 +32,11 @@ public class HrPositionRepositoryImpl implements HrPositionRepository {
     }
 
     @Override
+    public List<HrPosition> findAllById(List<UUID> ids) {
+        return jpaRepository.findAllById(ids).stream().map(this::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
     public HrPosition save(HrPosition position) {
         HrPositionEntity entity = toEntity(position);
         return toDomain(jpaRepository.save(entity));

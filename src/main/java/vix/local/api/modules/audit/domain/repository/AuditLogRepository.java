@@ -8,4 +8,5 @@ import java.util.UUID;
 public interface AuditLogRepository {
     AuditLog save(AuditLog log);
     List<AuditLog> findByDepartmentId(UUID departmentId);
+    List<AuditLog> findByPerformedBy(String performedBy);
 }

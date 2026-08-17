@@ -43,6 +43,23 @@ departments:
         actions: [ "VIEW", "CREATE", "UPDATE", "DELETE" ]
 
   # ---------------------------------------------------------------------------
+  # BAN GIÁM ĐỐC (BGD)
+  # ---------------------------------------------------------------------------
+  - code: "BGD"
+    name: "Ban Giám Đốc"
+    screens:
+      - resource: "HR_USER"
+        actions: [ "VIEW", "CREATE", "UPDATE", "DELETE", "APPROVE" ]
+      - resource: "HR_DEPARTMENT"
+        actions: [ "VIEW", "CREATE", "UPDATE", "DELETE", "APPROVE" ]
+      - resource: "REPORT"
+        actions: [ "VIEW", "EXPORT", "APPROVE" ]
+      - resource: "MANAGE_ROLE_GROUP"
+        actions: [ "VIEW", "CREATE", "UPDATE", "DELETE" ]
+      - resource: "DASHBOARD"
+        actions: [ "VIEW" ]
+
+  # ---------------------------------------------------------------------------
   # PHÒNG NGUỒN VỐN (NV)
   # Lưu ý: Báo cáo và Batch chỉ được phép VIEW/EXPORT (không có CRUD)
   # ---------------------------------------------------------------------------
@@ -51,7 +68,9 @@ departments:
     screens:
       - resource: "CAPITAL_CONFIG"
         actions: [ "VIEW", "CREATE", "UPDATE", "DELETE", "APPROVE" ]
-      - resource: "CAPITAL_PARTNER_LIMIT"
+      - resource: "CAPITAL_PARTNER"
+        actions: [ "VIEW", "CREATE", "UPDATE", "DELETE", "APPROVE" ]
+      - resource: "CAPITAL_LIMIT"
         actions: [ "VIEW", "CREATE", "UPDATE", "DELETE", "APPROVE" ]
       - resource: "CAPITAL_CONTRACT"
         actions: [ "VIEW", "CREATE", "UPDATE", "DELETE", "APPROVE" ]

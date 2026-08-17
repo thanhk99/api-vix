@@ -10,7 +10,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import vix.local.api.modules.hr.domain.exception.HrException;
 import vix.local.api.modules.identity.domain.exception.IdentityException;
 import vix.local.api.shared.dto.ApiResponse;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -40,6 +42,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGeneral(Exception ex) {
-        return ResponseEntity.internalServerError().body(ApiResponse.error("Lỗi hệ thống, vui lòng thử lại sau."));
+        log.error("Unhandled exception: ", ex);
+        return ResponseEntity.internalServerError().body(ApiResponse.error("Lỗi hệ thống, vui lòng thử lại sau. Chi tiết: " + ex.getMessage()));
     }
 }

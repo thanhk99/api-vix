@@ -54,6 +54,10 @@ public class HrUserEntity {
 
     // Department & Position
     private UUID departmentId;
+    
+    @Enumerated(EnumType.STRING)
+    private vix.local.api.modules.identity.domain.model.UserRole departmentRole;
+
     private UUID positionId;
 
     // Employment dates

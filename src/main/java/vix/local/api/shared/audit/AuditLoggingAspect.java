@@ -13,8 +13,6 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import vix.local.api.modules.audit.application.service.AuditApplicationService;
 import vix.local.api.modules.audit.domain.model.AuditLog;
-import vix.local.api.modules.identity.application.port.AuthPort;
-import vix.local.api.shared.security.JwtUtil;
 
 import java.util.UUID;
 
@@ -24,17 +22,19 @@ import java.util.UUID;
 public class AuditLoggingAspect {
 
     private final AuditApplicationService auditService;
-    private final AuthPort authPort;
 
     // Intercept all endpoints in API controllers
     @Pointcut("within(@org.springframework.web.bind.annotation.RestController *) && execution(* vix.local.api.modules..api..*(..))")
-    public void apiControllerMethods() {}
+    public void apiControllerMethods() {
+    }
 
     @AfterReturning(pointcut = "apiControllerMethods()")
     public void logAfter(JoinPoint joinPoint) {
         try {
-            ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-            if (attributes == null) return;
+            ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder
+                    .getRequestAttributes();
+            if (attributes == null)
+                return;
             HttpServletRequest request = attributes.getRequest();
 
             String method = request.getMethod();
@@ -43,7 +43,8 @@ public class AuditLoggingAspect {
             // Lấy thông tin user
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String email = "anonymous";
-            if (authentication != null && authentication.isAuthenticated() && !authentication.getPrincipal().equals("anonymousUser")) {
+            if (authentication != null && authentication.isAuthenticated()
+                    && !authentication.getPrincipal().equals("anonymousUser")) {
                 email = authentication.getName();
             }
 
@@ -51,7 +52,6 @@ public class AuditLoggingAspect {
             // Ở một hệ thống thực tế, thông tin này có thể được nhúng vào JWT claim
             UUID companyId = extractUuidFromHeader(request, "X-Company-Id");
             UUID departmentId = extractUuidFromHeader(request, "X-Department-Id");
-
 
             if (companyId == null) {
                 // Default UUID for system actions if not found
@@ -85,7 +85,8 @@ public class AuditLoggingAspect {
         if (headerVal != null && !headerVal.isEmpty()) {
             try {
                 return UUID.fromString(headerVal);
-            } catch (IllegalArgumentException ignored) {}
+            } catch (IllegalArgumentException ignored) {
+            }
         }
         return null;
     }

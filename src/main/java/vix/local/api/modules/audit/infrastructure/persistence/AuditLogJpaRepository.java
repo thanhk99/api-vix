@@ -6,4 +6,5 @@ import java.util.UUID;
 
 public interface AuditLogJpaRepository extends JpaRepository<AuditLogEntity, UUID> {
     List<AuditLogEntity> findByDepartmentIdOrderByTimestampDesc(UUID departmentId);
+    List<AuditLogEntity> findByPerformedByOrderByTimestampDesc(String performedBy);
 }

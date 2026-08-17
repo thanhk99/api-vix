@@ -5,8 +5,10 @@ import org.springframework.stereotype.Repository;
 import vix.local.api.modules.identity.domain.model.User;
 import vix.local.api.modules.identity.domain.repository.UserRepository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -25,6 +27,13 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    public List<User> findAll() {
+        return jpaRepository.findAll().stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public User save(User user) {
         UserEntity entity = toEntity(user);
         return toDomain(jpaRepository.save(entity));
@@ -40,6 +49,9 @@ public class UserRepositoryImpl implements UserRepository {
                 .status(entity.getStatus())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
+                .departmentId(entity.getDepartmentId())
+                .departmentRole(entity.getDepartmentRole())
+                .roleGroupId(entity.getRoleGroupId())
                 .build();
     }
 
@@ -53,6 +65,9 @@ public class UserRepositoryImpl implements UserRepository {
                 .status(user.getStatus())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
+                .departmentId(user.getDepartmentId())
+                .departmentRole(user.getDepartmentRole())
+                .roleGroupId(user.getRoleGroupId())
                 .build();
     }
 }

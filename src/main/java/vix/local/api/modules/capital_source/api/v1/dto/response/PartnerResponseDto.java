@@ -14,17 +14,28 @@ public class PartnerResponseDto {
     private String cusName;
     private String shortName;
     private String address;
+    private String idCode;
+    private LocalDate fistIssueDate;
+    private LocalDate lastIssueDate;
+    private String issueBy;
+    private Integer changeCount;
+    private String opLiscenseNo;
+    private LocalDate opIssueDate;
     private String mobile;
     private String email;
     private String website;
 
-    // Loại hình khách hàng
-    private String cusType;  // Phân loại KH
-    private String businessType;  // Loại hình kinh tế
-    private Boolean professionalInvestor;  // Nhà đầu tư chuyên nghiệp
-    private LocalDate professionalStartDate;  // Ngày bắt đầu NĐT chuyên nghiệp
-    private LocalDate professionalEndDate;  // Ngày kết thúc NĐT chuyên nghiệp
+    private String cusType;
+    private String businessType;
+    private Boolean professionalInvestor;
+    private LocalDate professionalStartDate;
+    private LocalDate professionalEndDate;
+    private String note;
 
     private String status;
+    private String createdBy;
+    private String updatedBy;
     private LocalDate lastUpdated;
+    private String approvedBy;
+    private java.time.LocalDateTime approvedAt;
 }

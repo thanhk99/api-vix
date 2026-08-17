@@ -38,4 +38,11 @@ public class AuthController {
                 .getName();
         return ResponseEntity.ok(ApiResponse.success(authService.selectDepartment(email, request.getDeptId())));
     }
+
+    @Operation(summary = "Lấy thông tin cá nhân", description = "Lấy thông tin của người dùng hiện tại")
+    @org.springframework.web.bind.annotation.GetMapping("/me")
+    public ResponseEntity<ApiResponse<AuthResponse.UserInfo>> getCurrentUser() {
+        String email = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        return ResponseEntity.ok(ApiResponse.success(authService.getCurrentUser(email)));
+    }
 }

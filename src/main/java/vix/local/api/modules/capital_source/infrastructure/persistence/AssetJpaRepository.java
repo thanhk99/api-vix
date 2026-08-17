@@ -12,4 +12,7 @@ import java.util.UUID;
 public interface AssetJpaRepository extends JpaRepository<AssetEntity, UUID> {
     @Query("SELECT a FROM AssetEntity a WHERE a.partnerId = :partnerId")
     List<AssetEntity> findByPartnerId(@Param("partnerId") UUID partnerId);
+
+    @Query("SELECT a FROM AssetEntity a WHERE a.creditLimitId = :creditLimitId")
+    List<AssetEntity> findByCreditLimitId(@Param("creditLimitId") UUID creditLimitId);
 }

@@ -7,6 +7,7 @@ import java.util.UUID;
 public interface AssetRepository {
     Asset save(Asset asset);
     List<Asset> findByPartnerId(UUID partnerId);
+    List<Asset> findByCreditLimitId(UUID creditLimitId);
     void deleteById(UUID id);
     Asset findById(UUID id);
 }

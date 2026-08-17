@@ -37,12 +37,18 @@ public class Partner {
     private Boolean professionalInvestor; // Nhà đầu tư chuyên nghiệp
     private LocalDate professionalStartDate; // Ngày bắt đầu NĐT chuyên nghiệp
     private LocalDate professionalEndDate; // Ngày kết thúc NĐT chuyên nghiệp
+    private String note; // Ghi chú
 
-    // Các trường khác đã tồn tại
+    public static final String STATUS_PENDING_APPROVAL = "PENDING_APPROVAL";
+    public static final String STATUS_APPROVED = "APPROVED";
+    public static final String STATUS_DELETED = "DELETED";
+
     private String status;
     private UUID createdBy;
     private UUID updatedBy;
     private LocalDate lastUpdated;
+    private UUID approvedBy;
+    private java.time.LocalDateTime approvedAt;
 
     // Business rules methods
     public void validatePartner() {
@@ -62,13 +68,62 @@ public class Partner {
             }
         }
     }
+    
+    public void updateCustomerTypeInfo(String cusType, String businessType, Boolean professionalInvestor, LocalDate startDate, LocalDate endDate, String note) {
+        if (STATUS_DELETED.equals(this.status)) {
+            throw new PartnerException("Không thể cập nhật đối tác đã bị xoá");
+        }
+        
+        this.cusType = cusType;
+        this.businessType = businessType;
+        this.professionalInvestor = professionalInvestor;
+        
+        if (Boolean.TRUE.equals(this.professionalInvestor)) {
+            this.professionalStartDate = startDate;
+            this.professionalEndDate = endDate;
+        } else {
+            this.professionalStartDate = null;
+            this.professionalEndDate = null;
+        }
+        
+        this.note = note;
+        this.status = STATUS_PENDING_APPROVAL;
+    }
 
     public void updatePartnerInfo(String cusId, String cusName) {
+        if (STATUS_DELETED.equals(this.status)) {
+            throw new PartnerException("Không thể cập nhật đối tác đã bị xoá");
+        }
+        
         if (cusId == null || cusId.isEmpty()) {
             throw new PartnerException("Mã KH không được để trống khi cập nhật thông tin đối tác");
         }
 
         this.cusId = cusId;
         this.cusName = cusName;
+        this.status = STATUS_PENDING_APPROVAL;
+    }
+    
+    public void markAsApproved(UUID approverId) {
+        if (STATUS_DELETED.equals(this.status)) {
+            throw new PartnerException("Không thể duyệt đối tác đã xoá");
+        }
+        if (STATUS_APPROVED.equals(this.status)) {
+            throw new PartnerException("Đối tác đã được duyệt");
+        }
+        this.status = STATUS_APPROVED;
+        this.approvedBy = approverId;
+        this.approvedAt = java.time.LocalDateTime.now();
+    }
+    
+    public void markAsDeleted() {
+        if (STATUS_DELETED.equals(this.status)) {
+            throw new PartnerException("Đối tác đã bị xoá");
+        }
+        this.status = STATUS_DELETED;
+    }
+    
+    public void resetToPending() {
+        this.status = STATUS_PENDING_APPROVAL;
     }
 }

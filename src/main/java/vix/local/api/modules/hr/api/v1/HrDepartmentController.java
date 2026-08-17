@@ -15,8 +15,6 @@ import vix.local.api.modules.hr.application.service.HrDepartmentApplicationServi
 import vix.local.api.modules.hr.domain.model.HrDepartment;
 import vix.local.api.modules.hr.domain.model.HrUser;
 import vix.local.api.modules.hr.domain.repository.HrUserRepository;
-import vix.local.api.modules.identity.domain.model.UserDepartment;
-import vix.local.api.modules.identity.domain.repository.UserDepartmentRepository;
 import vix.local.api.shared.dto.ApiResponse;
 
 import java.util.List;
@@ -31,11 +29,10 @@ import java.util.stream.Collectors;
 public class HrDepartmentController {
 
     private final HrDepartmentApplicationService hrDepartmentService;
-    private final UserDepartmentRepository userDepartmentRepository;
     private final HrUserRepository hrUserRepository;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("@permissionGuard.has('HR_DEPARTMENT', 'VIEW')")
     @Operation(summary = "Lấy danh sách phòng ban")
     public ResponseEntity<ApiResponse<List<DepartmentResponse>>> getAllDepartments() {
         List<DepartmentResponse> list = hrDepartmentService.getAllDepartments().stream()
@@ -45,14 +42,14 @@ public class HrDepartmentController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("@permissionGuard.has('HR_DEPARTMENT', 'VIEW')")
     @Operation(summary = "Lấy chi tiết phòng ban")
     public ResponseEntity<ApiResponse<DepartmentResponse>> getDepartmentById(@PathVariable UUID id) {
         return ResponseEntity.ok(ApiResponse.success(toResponse(hrDepartmentService.getDepartmentById(id))));
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("@permissionGuard.has('HR_DEPARTMENT', 'CREATE')")
     @Operation(summary = "Tạo phòng ban mới")
     public ResponseEntity<ApiResponse<DepartmentResponse>> createDepartment(@Valid @RequestBody CreateDepartmentRequest request) {
         HrDepartment dept = hrDepartmentService.createDepartment(request);
@@ -60,7 +57,7 @@ public class HrDepartmentController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("@permissionGuard.has('HR_DEPARTMENT', 'UPDATE')")
     @Operation(summary = "Cập nhật thông tin phòng ban")
     public ResponseEntity<ApiResponse<DepartmentResponse>> updateDepartment(
             @PathVariable UUID id,
@@ -70,7 +67,7 @@ public class HrDepartmentController {
     }
 
     @PatchMapping("/{id}/set-manager")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("@permissionGuard.has('HR_DEPARTMENT', 'APPROVE')")
     @Operation(summary = "Thiết lập trưởng phòng cho phòng ban")
     public ResponseEntity<ApiResponse<DepartmentResponse>> setManager(
             @PathVariable UUID id,
@@ -80,7 +77,7 @@ public class HrDepartmentController {
     }
 
     @PatchMapping("/{id}/deactivate")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("@permissionGuard.has('HR_DEPARTMENT', 'DELETE')")
     @Operation(summary = "Vô hiệu hóa phòng ban")
     public ResponseEntity<ApiResponse<DepartmentResponse>> deactivateDepartment(@PathVariable UUID id) {
         HrDepartment dept = hrDepartmentService.deactivateDepartment(id);
@@ -92,14 +89,14 @@ public class HrDepartmentController {
         String managerName = null;
         String managerCode = null;
 
-        Optional<UserDepartment> managerUdOpt = userDepartmentRepository.findManagerByDepartmentId(domain.getId());
-        if (managerUdOpt.isPresent()) {
-            managerId = managerUdOpt.get().getUserId();
-            Optional<HrUser> managerUserOpt = hrUserRepository.findById(managerId);
-            if (managerUserOpt.isPresent()) {
-                managerName = managerUserOpt.get().getFullName();
-                managerCode = managerUserOpt.get().getEmployeeCode();
-            }
+        Optional<HrUser> managerUserOpt = hrUserRepository.findAll().stream()
+            .filter(u -> domain.getId().equals(u.getDepartmentId()) && vix.local.api.modules.identity.domain.model.UserRole.DEPT_ADMIN == u.getDepartmentRole())
+            .findFirst();
+
+        if (managerUserOpt.isPresent()) {
+            managerId = managerUserOpt.get().getId();
+            managerName = managerUserOpt.get().getFullName();
+            managerCode = managerUserOpt.get().getEmployeeCode();
         }
 
         return DepartmentResponse.builder()

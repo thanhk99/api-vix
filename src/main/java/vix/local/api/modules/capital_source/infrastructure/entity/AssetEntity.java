@@ -3,6 +3,8 @@ package vix.local.api.modules.capital_source.infrastructure.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.Builder;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -11,12 +13,18 @@ import java.util.UUID;
 @Table(name = "assets", schema = "capital_source")
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class AssetEntity {
     @Id
     private UUID id;
 
     @Column(name = "partner_id")
     private UUID partnerId;
+
+    @Column(name = "credit_limit_id")
+    private UUID creditLimitId;
+
 
     @Column(name = "asset_id")
     private String assetId;  // Mã TSĐB

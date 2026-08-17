@@ -81,4 +81,29 @@ public class PermissionController {
         permissionService.assignUsersToRoleGroup(deptId, codeName, request);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
+
+    @GetMapping("/my-permissions")
+    @Operation(summary = "Lấy quyền của user", description = "Lấy danh sách quyền của user trong phòng ban hiện tại")
+    public ResponseEntity<ApiResponse<List<vix.local.api.modules.permission.api.v1.dto.request.PermissionDto>>> getMyPermissions(
+            @RequestHeader("X-Department-Id") UUID deptId) {
+        return ResponseEntity.ok(ApiResponse.success(permissionService.getMyPermissions(deptId)));
+    }
+
+    @GetMapping("/users/{userId}")
+    @Operation(summary = "Lấy quyền của một nhân viên", description = "Lấy danh sách quyền của một nhân viên cụ thể")
+    public ResponseEntity<ApiResponse<List<vix.local.api.modules.permission.api.v1.dto.request.PermissionDto>>> getUserPermissions(
+            @RequestHeader("X-Department-Id") UUID deptId,
+            @PathVariable UUID userId) {
+        return ResponseEntity.ok(ApiResponse.success(permissionService.getUserPermissions(deptId, userId)));
+    }
+
+    @PostMapping("/users/{userId}")
+    @Operation(summary = "Lưu quyền cho nhân viên", description = "Cập nhật (tạo role group riêng) quyền cho nhân viên")
+    public ResponseEntity<ApiResponse<Void>> saveUserPermissions(
+            @RequestHeader("X-Department-Id") UUID deptId,
+            @PathVariable UUID userId,
+            @RequestBody List<vix.local.api.modules.permission.api.v1.dto.request.PermissionDto> permissions) {
+        permissionService.saveUserPermissions(deptId, userId, permissions);
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
 }

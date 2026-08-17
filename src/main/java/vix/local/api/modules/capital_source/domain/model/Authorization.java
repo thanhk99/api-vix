@@ -25,20 +25,38 @@ public class Authorization {
     private String issuePlace; // Nơi cấp
     private String authNo; // Số giấy tờ
     private LocalDate effDate; // Ngày hiệu lực
-    private LocalDate ExpiryDate; // Ngày hết hạn
+    private LocalDate expiryDate; // Ngày hết hạn
     private String authedPosition; // Chức vụ người được uỷ quyền
-    private String scope; // Phạm vi UQ (có thể không có trường DB)
+    private String scope; // Phạm vi UQ
     private String phone; // SĐT
     private String email; // Email
+    private String status; // Trạng thái
 
     public void validateAuthorization() {
+        if (this.authidNo == null || this.authidNo.isEmpty()) {
+            throw new AuthorizationException("CC/CCCD người uỷ quyền không được để trống");
+        }
+        if (this.authedIdNo == null || this.authedIdNo.isEmpty()) {
+            throw new AuthorizationException("CC/CCCD người được uỷ quyền không được để trống");
+        }
         if (this.effDate == null) {
             throw new AuthorizationException("Ngày hiệu lực không được để trống");
         }
+        if (this.expiryDate == null) {
+            throw new AuthorizationException("Ngày hết hạn không được để trống");
+        }
 
-        if (this.ExpiryDate != null &&
-                this.effDate.isAfter(this.ExpiryDate)) {
+        if (this.expiryDate != null &&
+                this.effDate.isAfter(this.expiryDate)) {
             throw new AuthorizationException("Ngày hết hạn phải sau ngày hiệu lực");
+        }
+    }
+    
+    public void updateStatus() {
+        if (this.expiryDate != null && this.expiryDate.isBefore(LocalDate.now())) {
+            this.status = "DUEDATE";
+        } else {
+            this.status = "ACTIVE";
         }
     }
 }

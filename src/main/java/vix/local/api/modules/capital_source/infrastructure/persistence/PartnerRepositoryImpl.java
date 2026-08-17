@@ -1,6 +1,8 @@
 package vix.local.api.modules.capital_source.infrastructure.persistence;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import vix.local.api.modules.capital_source.domain.model.Partner;
 import vix.local.api.modules.capital_source.domain.repository.PartnerRepository;
@@ -27,10 +29,9 @@ public class PartnerRepositoryImpl implements PartnerRepository {
     }
     
     @Override
-    public List<Partner> findAll() {
-        return partnerJpaRepository.findAll().stream()
-                .map(this::convertToModel)
-                .toList();
+    public Page<Partner> findAll(Pageable pageable) {
+        return partnerJpaRepository.findAllActive(pageable)
+                .map(this::convertToModel);
     }
     
     @Override
@@ -61,10 +62,13 @@ public class PartnerRepositoryImpl implements PartnerRepository {
         entity.setProfessionalInvestor(partner.getProfessionalInvestor());
         entity.setProfessionalStartDate(partner.getProfessionalStartDate());
         entity.setProfessionalEndDate(partner.getProfessionalEndDate());
+        entity.setNote(partner.getNote());
         entity.setStatus(partner.getStatus());
         entity.setCreatedBy(partner.getCreatedBy());
         entity.setUpdatedBy(partner.getUpdatedBy());
         entity.setLastUpdated(partner.getLastUpdated());
+        entity.setApprovedBy(partner.getApprovedBy());
+        entity.setApprovedAt(partner.getApprovedAt());
         return entity;
     }
     
@@ -92,10 +96,13 @@ public class PartnerRepositoryImpl implements PartnerRepository {
                 .professionalInvestor(entity.getProfessionalInvestor())
                 .professionalStartDate(entity.getProfessionalStartDate())
                 .professionalEndDate(entity.getProfessionalEndDate())
+                .note(entity.getNote())
                 .status(entity.getStatus())
                 .createdBy(entity.getCreatedBy())
                 .updatedBy(entity.getUpdatedBy())
                 .lastUpdated(entity.getLastUpdated())
+                .approvedBy(entity.getApprovedBy())
+                .approvedAt(entity.getApprovedAt())
                 .build();
     }
 }

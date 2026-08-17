@@ -10,14 +10,26 @@ import java.util.UUID;
 @Builder
 public class CreditLimitResponseDto {
     private UUID id;
+    private UUID partnerId;
     private String limitId;
     private String poolName;
     private String currency;
     private String poolType;
+    private String contactNo;
+    private BigDecimal creditRatio;
+    private String purpose;
     private BigDecimal totalPool;
     private BigDecimal usedPool;
     private BigDecimal remainPool;
     private LocalDate startDate;
     private LocalDate endDate;
     private String status;
+    private java.time.LocalDateTime createdAt;
+    private java.time.LocalDateTime updatedAt;
+    private String approvedBy;
+    private java.time.LocalDateTime approvedAt;
+    
+    private UUID parentId;
+    private boolean hasCollateral;
+    private java.util.List<CreditLimitResponseDto> children;
 }

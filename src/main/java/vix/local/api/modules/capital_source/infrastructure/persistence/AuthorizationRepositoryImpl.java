@@ -8,6 +8,10 @@ import vix.local.api.modules.capital_source.infrastructure.entity.AuthorizationE
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import java.util.Optional;
+
 @Repository
 @RequiredArgsConstructor
 public class AuthorizationRepositoryImpl implements AuthorizationRepository {
@@ -22,10 +26,9 @@ public class AuthorizationRepositoryImpl implements AuthorizationRepository {
     }
 
     @Override
-    public List<Authorization> findByPartnerId(UUID partnerId) {
-        return authorizationJpaRepository.findByPartnerId(partnerId).stream()
-                .map(this::convertToModel)
-                .toList();
+    public Page<Authorization> findByPartnerId(UUID partnerId, Pageable pageable) {
+        return authorizationJpaRepository.findByPartnerId(partnerId, pageable)
+                .map(this::convertToModel);
     }
 
     @Override
@@ -38,7 +41,17 @@ public class AuthorizationRepositoryImpl implements AuthorizationRepository {
         return convertToModel(authorizationJpaRepository.findById(id).orElse(null));
     }
 
+    @Override
+    public Integer getMaxSeqIdByPartnerId(UUID partnerId) {
+        Optional<AuthorizationEntity> topAuth = authorizationJpaRepository.findTopByPartnerIdOrderBySeqIdDesc(partnerId);
+        if (topAuth.isPresent() && topAuth.get().getSeqId() != null) {
+            return topAuth.get().getSeqId();
+        }
+        return 0;
+    }
+
     private AuthorizationEntity convertToEntity(Authorization authorization) {
+        if (authorization == null) return null;
         AuthorizationEntity entity = AuthorizationEntity.builder()
                 .id(authorization.getId())
                 .partnerId(authorization.getPartnerId())
@@ -53,8 +66,10 @@ public class AuthorizationRepositoryImpl implements AuthorizationRepository {
                 .issuePlace(authorization.getIssuePlace())
                 .authNo(authorization.getAuthNo())
                 .effDate(authorization.getEffDate())
-                .ExpiryDate(authorization.getExpiryDate())
+                .expiryDate(authorization.getExpiryDate())
                 .authedPosition(authorization.getAuthedPosition())
+                .scope(authorization.getScope())
+                .status(authorization.getStatus())
                 .phone(authorization.getPhone())
                 .email(authorization.getEmail())
                 .build();
@@ -77,8 +92,10 @@ public class AuthorizationRepositoryImpl implements AuthorizationRepository {
                 .issuePlace(entity.getIssuePlace())
                 .authNo(entity.getAuthNo())
                 .effDate(entity.getEffDate())
-                .ExpiryDate(entity.getExpiryDate())
+                .expiryDate(entity.getExpiryDate())
                 .authedPosition(entity.getAuthedPosition())
+                .scope(entity.getScope())
+                .status(entity.getStatus())
                 .phone(entity.getPhone())
                 .email(entity.getEmail())
                 .build();

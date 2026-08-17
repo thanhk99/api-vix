@@ -68,6 +68,8 @@ public class PartnerEntity {
     @Column(name = "professional_end_date")
     private LocalDate professionalEndDate;
     
+    private String note;
+    
     private String status;
     
     @Column(name = "created_by")
@@ -78,4 +80,25 @@ public class PartnerEntity {
     
     @Column(name = "last_updated")
     private LocalDate lastUpdated;
+    
+    @Column(name = "approved_by")
+    private UUID approvedBy;
+    
+    @Column(name = "approved_at")
+    private java.time.LocalDateTime approvedAt;
+    
+    @PrePersist
+    protected void onCreate() {
+        if (this.id == null) {
+            this.id = com.github.f4b6a3.uuid.UuidCreator.getTimeOrderedEpoch();
+        }
+        if (this.lastUpdated == null) {
+            this.lastUpdated = LocalDate.now();
+        }
+    }
+    
+    @PreUpdate
+    protected void onUpdate() {
+        this.lastUpdated = LocalDate.now();
+    }
 }

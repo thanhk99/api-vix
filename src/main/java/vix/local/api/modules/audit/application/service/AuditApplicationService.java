@@ -34,4 +34,8 @@ public class AuditApplicationService {
         return auditLogRepository.findByDepartmentId(departmentId);
     }
 
+    @Transactional(readOnly = true)
+    public List<AuditLog> getLogsByPerformedBy(String email) {
+        return auditLogRepository.findByPerformedBy(email);
+    }
 }

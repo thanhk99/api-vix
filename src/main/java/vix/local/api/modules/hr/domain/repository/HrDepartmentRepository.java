@@ -10,6 +10,7 @@ public interface HrDepartmentRepository {
     Optional<HrDepartment> findById(UUID id);
     Optional<HrDepartment> findByCode(String code);
     List<HrDepartment> findAll();
+    List<HrDepartment> findAllById(List<UUID> ids);
     List<HrDepartment> findByStatus(String status);
     boolean existsByCode(String code);
     HrDepartment save(HrDepartment department);

@@ -32,6 +32,11 @@ public class HrDepartmentRepositoryImpl implements HrDepartmentRepository {
     }
 
     @Override
+    public List<HrDepartment> findAllById(List<UUID> ids) {
+        return jpaRepository.findAllById(ids).stream().map(this::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
     public List<HrDepartment> findByStatus(String status) {
         return jpaRepository.findByStatus(status).stream().map(this::toDomain).collect(Collectors.toList());
     }

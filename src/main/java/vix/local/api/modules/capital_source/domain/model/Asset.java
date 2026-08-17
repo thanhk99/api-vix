@@ -15,6 +15,7 @@ import java.util.UUID;
 public class Asset {
     private UUID id;
     private UUID partnerId; // ID của đối tác liên quan
+    private UUID creditLimitId; // ID của HĐ hạn mức liên quan
     private String assetId; // Mã TSĐB
     private String assetType; // Loại TSĐB
     private String issuer; // Tổ chức phát hành

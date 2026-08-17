@@ -42,6 +42,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 email = jwtUtil.extractEmail(jwt);
                 String schemaTarget = jwtUtil.extractSchemaTarget(jwt);
                 List<String> roles = jwtUtil.extractRoles(jwt);
+                java.util.UUID deptId = jwtUtil.extractDeptId(jwt);
 
                 if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                     List<SimpleGrantedAuthority> authorities = roles.stream()
@@ -56,6 +57,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     // Set schema for multi-tenancy
                     if (schemaTarget != null && !schemaTarget.isEmpty()) {
                         TenantContext.setSchema(schemaTarget);
+                    }
+                    if (deptId != null) {
+                        request.setAttribute("X-Department-Id", deptId);
                     }
                 }
             }

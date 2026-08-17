@@ -8,8 +8,14 @@ import vix.local.api.modules.capital_source.infrastructure.entity.AuthorizationE
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import java.util.Optional;
+
 @Repository
 public interface AuthorizationJpaRepository extends JpaRepository<AuthorizationEntity, UUID> {
-    @Query("SELECT a FROM AuthorizationEntity a WHERE a.partnerId = :partnerId")
-    List<AuthorizationEntity> findByPartnerId(@Param("partnerId") UUID partnerId);
+    
+    Page<AuthorizationEntity> findByPartnerId(UUID partnerId, Pageable pageable);
+    
+    Optional<AuthorizationEntity> findTopByPartnerIdOrderBySeqIdDesc(UUID partnerId);
 }

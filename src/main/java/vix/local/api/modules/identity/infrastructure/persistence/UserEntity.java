@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import vix.local.api.modules.identity.domain.model.UserRole;
 import vix.local.api.modules.identity.domain.model.UserStatus;
 
 import java.time.LocalDateTime;
@@ -37,6 +38,13 @@ public class UserEntity {
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+
+    private UUID departmentId;
+
+    @Enumerated(EnumType.STRING)
+    private UserRole departmentRole;
+
+    private UUID roleGroupId;
 
     @PrePersist
     protected void onCreate() {

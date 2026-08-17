@@ -28,7 +28,12 @@ public class AuditLogRepositoryImpl implements AuditLogRepository {
                 .collect(Collectors.toList());
     }
 
-
+    @Override
+    public List<AuditLog> findByPerformedBy(String performedBy) {
+        return jpaRepository.findByPerformedByOrderByTimestampDesc(performedBy).stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
+    }
 
     private AuditLog toDomain(AuditLogEntity entity) {
         if (entity == null) return null;

@@ -9,7 +9,6 @@ import vix.local.api.modules.permission.application.service.DepartmentPermission
 import vix.local.api.modules.audit.domain.model.AuditLog;
 import vix.local.api.modules.hr.domain.model.HrDepartment;
 import vix.local.api.modules.hr.domain.repository.HrDepartmentRepository;
-import vix.local.api.modules.identity.domain.repository.UserDepartmentRepository;
 import vix.local.api.modules.identity.domain.repository.UserRepository;
 import vix.local.api.modules.permission.api.v1.dto.request.AssignUsersRequest;
 import vix.local.api.modules.permission.api.v1.dto.request.PermissionDto;
@@ -20,10 +19,9 @@ import vix.local.api.modules.permission.domain.exception.PermissionException;
 import vix.local.api.modules.permission.domain.model.ResourceCode;
 import vix.local.api.modules.permission.domain.model.RoleGroup;
 import vix.local.api.modules.permission.domain.model.RoleGroupPermission;
-import vix.local.api.modules.permission.domain.model.UserRoleGroup;
 import vix.local.api.modules.permission.domain.repository.RoleGroupPermissionRepository;
 import vix.local.api.modules.permission.domain.repository.RoleGroupRepository;
-import vix.local.api.modules.permission.domain.repository.UserRoleGroupRepository;
+import vix.local.api.modules.identity.domain.model.User;
 
 import java.util.Arrays;
 import java.util.List;
@@ -39,9 +37,7 @@ public class PermissionApplicationService {
 
     private final RoleGroupRepository roleGroupRepository;
     private final RoleGroupPermissionRepository roleGroupPermissionRepository;
-    private final UserRoleGroupRepository userRoleGroupRepository;
     private final UserRepository userRepository;
-    private final UserDepartmentRepository userDepartmentRepository;
     private final AuditApplicationService auditService;
     private final HrDepartmentRepository hrDepartmentRepository;
     private final DepartmentPermissionInitService departmentPermissionInitService;
@@ -154,7 +150,7 @@ public class PermissionApplicationService {
             throw PermissionException.unauthorizedAction("Nhóm quyền này không thuộc phòng ban của bạn");
         }
 
-        if (userRoleGroupRepository.existsByRoleGroupId(roleGroup.getId())) {
+        if (userRepository.findAll().stream().anyMatch(u -> roleGroup.getId().equals(u.getRoleGroupId()))) {
             throw PermissionException.unauthorizedAction("Không thể xóa nhóm quyền đang có nhân viên");
         }
 
@@ -177,31 +173,23 @@ public class PermissionApplicationService {
 
         List<UUID> newUsers = request.getUserIds();
 
-        // Validate if users belong to this department
-        for (UUID userId : newUsers) {
-            if (!userRepository.findById(userId).isPresent()) {
-                throw new PermissionException(org.springframework.http.HttpStatus.NOT_FOUND,
-                        "User not found: " + userId);
-            }
-            if (userDepartmentRepository.findByUserId(userId).stream()
-                    .noneMatch(ud -> ud.getDepartmentId().equals(deptId))) {
-                throw PermissionException.unauthorizedAction("Nhân viên " + userId + " không thuộc phòng ban này");
-            }
-        }
+        // Clear old users assigned to this role group
+        userRepository.findAll().stream()
+                .filter(u -> roleGroup.getId().equals(u.getRoleGroupId()))
+                .forEach(u -> {
+                    u.setRoleGroupId(null);
+                    userRepository.save(u);
+                });
 
-        userRoleGroupRepository.deleteByRoleGroupId(roleGroup.getId());
-
-        UUID assignedBy = getCurrentUserId();
         if (!newUsers.isEmpty()) {
-            List<UserRoleGroup> entities = newUsers.stream()
-                    .map(userId -> UserRoleGroup.builder()
-                            .userId(userId)
-                            .roleGroupId(roleGroup.getId())
-                            .deptId(deptId)
-                            .assignedBy(assignedBy)
-                            .build())
-                    .collect(Collectors.toList());
-            userRoleGroupRepository.saveAll(entities);
+            for (UUID userId : newUsers) {
+                User user = userRepository.findById(userId).orElseThrow(() -> new PermissionException(org.springframework.http.HttpStatus.NOT_FOUND, "User not found: " + userId));
+                if (!deptId.equals(user.getDepartmentId())) {
+                    throw PermissionException.unauthorizedAction("Nhân viên " + userId + " không thuộc phòng ban này");
+                }
+                user.setRoleGroupId(roleGroup.getId());
+                userRepository.save(user);
+            }
         }
 
         logAction(deptId, "ASSIGN_ROLE_GROUP", "Gán/Cập nhật nhân viên cho nhóm quyền: " + roleGroup.getName());
@@ -260,5 +248,85 @@ public class PermissionApplicationService {
                 .departmentId(deptId)
                 .build();
         auditService.logAsync(logData);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PermissionDto> getMyPermissions(UUID deptId) {
+        UUID userId = getCurrentUserId();
+        if (userId == null) return List.of();
+
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null || user.getRoleGroupId() == null || !deptId.equals(user.getDepartmentId())) {
+            return List.of();
+        }
+
+        List<PermissionDto> allPermissions = new java.util.ArrayList<>();
+        List<RoleGroupPermission> perms = roleGroupPermissionRepository.findByRoleGroupId(user.getRoleGroupId());
+        for (RoleGroupPermission p : perms) {
+            PermissionDto dto = new PermissionDto();
+            dto.setResource(p.getResource());
+            dto.setActions(p.getActions());
+            allPermissions.add(dto);
+        }
+        
+        return allPermissions;
+    }
+
+    @Transactional(readOnly = true)
+    public List<PermissionDto> getUserPermissions(UUID deptId, UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new PermissionException(HttpStatus.NOT_FOUND, "User not found"));
+        
+        if (!deptId.equals(user.getDepartmentId())) {
+            throw PermissionException.unauthorizedAction("Nhân viên không thuộc phòng ban này");
+        }
+        
+        if (user.getRoleGroupId() == null) {
+            return List.of();
+        }
+        
+        return roleGroupPermissionRepository.findByRoleGroupId(user.getRoleGroupId()).stream()
+                .map(p -> {
+                    PermissionDto dto = new PermissionDto();
+                    dto.setResource(p.getResource());
+                    dto.setActions(p.getActions());
+                    return dto;
+                }).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void saveUserPermissions(UUID deptId, UUID userId, List<PermissionDto> permissions) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new PermissionException(HttpStatus.NOT_FOUND, "User not found"));
+        
+        if (!deptId.equals(user.getDepartmentId())) {
+            throw PermissionException.unauthorizedAction("Nhân viên không thuộc phòng ban này");
+        }
+        
+        String customCodeName = "CUSTOM_ROLE_USER_" + userId.toString().replace("-", "").toUpperCase();
+        
+        RoleGroup roleGroup = roleGroupRepository.findByCodeNameAndDeptId(customCodeName, deptId)
+                .orElseGet(() -> {
+                    RoleGroup rg = RoleGroup.builder()
+                            .deptId(deptId)
+                            .name("Quyền riêng cho " + user.getFullName())
+                            .description("Nhóm quyền tạo tự động cho user " + user.getEmail())
+                            .isActive(true)
+                            .createdBy(getCurrentUserId())
+                            .codeName(customCodeName)
+                            .build();
+                    return roleGroupRepository.save(rg);
+                });
+                
+        // Lưu quyền cho role group này
+        savePermissions(roleGroup.getId(), permissions);
+        
+        // Gán user vào role group nếu chưa gán
+        if (!roleGroup.getId().equals(user.getRoleGroupId())) {
+            user.setRoleGroupId(roleGroup.getId());
+            userRepository.save(user);
+        }
+        
+        logAction(deptId, "SAVE_USER_PERMISSIONS", "Cập nhật quyền riêng cho nhân viên: " + user.getEmail());
     }
 }

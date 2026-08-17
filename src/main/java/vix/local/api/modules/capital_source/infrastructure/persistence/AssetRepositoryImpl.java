@@ -29,6 +29,13 @@ public class AssetRepositoryImpl implements AssetRepository {
     }
 
     @Override
+    public List<Asset> findByCreditLimitId(UUID creditLimitId) {
+        return assetJpaRepository.findByCreditLimitId(creditLimitId).stream()
+                .map(this::convertToModel)
+                .toList();
+    }
+
+    @Override
     public void deleteById(UUID id) {
         assetJpaRepository.deleteById(id);
     }
@@ -42,6 +49,7 @@ public class AssetRepositoryImpl implements AssetRepository {
         AssetEntity entity = AssetEntity.builder()
                 .id(asset.getId())
                 .partnerId(asset.getPartnerId())
+                .creditLimitId(asset.getCreditLimitId())
                 .assetId(asset.getAssetId())
                 .assetType(asset.getAssetType())
                 .issuer(asset.getIssuer())
@@ -62,6 +70,7 @@ public class AssetRepositoryImpl implements AssetRepository {
         return Asset.builder()
                 .id(entity.getId())
                 .partnerId(entity.getPartnerId())
+                .creditLimitId(entity.getCreditLimitId())
                 .assetId(entity.getAssetId())
                 .assetType(entity.getAssetType())
                 .issuer(entity.getIssuer())

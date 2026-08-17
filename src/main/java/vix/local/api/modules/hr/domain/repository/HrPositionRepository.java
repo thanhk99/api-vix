@@ -10,6 +10,7 @@ public interface HrPositionRepository {
     Optional<HrPosition> findById(UUID id);
     Optional<HrPosition> findByCode(String code);
     List<HrPosition> findAll();
+    List<HrPosition> findAllById(List<UUID> ids);
     HrPosition save(HrPosition position);
     void deleteById(UUID id);
 }

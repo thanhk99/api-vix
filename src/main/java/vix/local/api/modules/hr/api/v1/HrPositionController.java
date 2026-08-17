@@ -27,7 +27,7 @@ public class HrPositionController {
     private final HrPositionApplicationService hrPositionService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("@permissionGuard.has('HR_DEPARTMENT', 'VIEW')")
     @Operation(summary = "Lấy danh sách chức danh")
     public ResponseEntity<ApiResponse<List<PositionResponse>>> getAllPositions() {
         List<PositionResponse> list = hrPositionService.getAllPositions().stream()
@@ -37,14 +37,14 @@ public class HrPositionController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("@permissionGuard.has('HR_DEPARTMENT', 'VIEW')")
     @Operation(summary = "Lấy chi tiết chức danh")
     public ResponseEntity<ApiResponse<PositionResponse>> getPositionById(@PathVariable UUID id) {
         return ResponseEntity.ok(ApiResponse.success(toResponse(hrPositionService.getPositionById(id))));
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("@permissionGuard.has('HR_DEPARTMENT', 'CREATE')")
     @Operation(summary = "Tạo chức danh mới")
     public ResponseEntity<ApiResponse<PositionResponse>> createPosition(@Valid @RequestBody CreatePositionRequest request) {
         HrPosition pos = hrPositionService.createPosition(request);
@@ -52,7 +52,7 @@ public class HrPositionController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("@permissionGuard.has('HR_DEPARTMENT', 'UPDATE')")
     @Operation(summary = "Cập nhật chức danh")
     public ResponseEntity<ApiResponse<PositionResponse>> updatePosition(
             @PathVariable UUID id,

@@ -27,7 +27,7 @@ public class RoleGroupEntity {
     private String name;
 
     // Thêm cột codeName
-    @Column(nullable = false, unique = true)  // Đảm bảo duy nhất trong từng phòng ban
+    @Column(unique = true)  // Đảm bảo duy nhất trong từng phòng ban
     private String codeName;
 
     private String description;
