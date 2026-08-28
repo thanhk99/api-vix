@@ -29,10 +29,53 @@ public class KunnRepositoryImpl implements KunnRepository {
     }
 
     @Override
+    public org.springframework.data.domain.Page<Kunn> findAll(org.springframework.data.domain.Pageable pageable) {
+        return kunnJpaRepository.findActiveKunns(pageable)
+                .map(this::convertToModel);
+    }
+
+    @Override
     public List<Kunn> findAll() {
         return kunnJpaRepository.findAll().stream()
                 .map(this::convertToModel)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Kunn> findByLimitId(UUID limitId) {
+        return kunnJpaRepository.findByLimitId(limitId).stream()
+                .map(this::convertToModel)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Kunn> findByCusId(UUID cusId) {
+        return kunnJpaRepository.findByCusId(cusId).stream()
+                .map(this::convertToModel)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Kunn> saveAll(List<Kunn> kunns) {
+        List<KunnEntity> entities = kunns.stream().map(this::convertToEntity).collect(Collectors.toList());
+        return kunnJpaRepository.saveAll(entities).stream()
+                .map(this::convertToModel)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public java.math.BigDecimal sumPendingLnAmtByLimitId(UUID limitId, UUID excludeKunnId) {
+        return kunnJpaRepository.sumPendingLnAmtByLimitId(limitId, excludeKunnId);
+    }
+
+    @Override
+    public java.math.BigDecimal sumPendingLnAmtByContractId(UUID contractId, UUID excludeKunnId) {
+        return kunnJpaRepository.sumPendingLnAmtByContractId(contractId, excludeKunnId);
+    }
+
+    @Override
+    public java.math.BigDecimal sumPendingLnAmtByPartnerId(UUID partnerId, UUID excludeKunnId) {
+        return kunnJpaRepository.sumPendingLnAmtByPartnerId(partnerId, excludeKunnId);
     }
 
     private KunnEntity convertToEntity(Kunn kunn) {
@@ -56,6 +99,8 @@ public class KunnRepositoryImpl implements KunnRepository {
                 .purpose(kunn.getPurpose())
                 .intTerm(kunn.getIntTerm())
                 .prinTerm(kunn.getPrinTerm())
+                .prepaymentNote(kunn.getPrepaymentNote())
+                .note(kunn.getNote())
                 .status(kunn.getStatus())
                 .createdDate(kunn.getCreatedDate())
                 .createUser(kunn.getCreateUser())
@@ -85,6 +130,8 @@ public class KunnRepositoryImpl implements KunnRepository {
                 .purpose(entity.getPurpose())
                 .intTerm(entity.getIntTerm())
                 .prinTerm(entity.getPrinTerm())
+                .prepaymentNote(entity.getPrepaymentNote())
+                .note(entity.getNote())
                 .status(entity.getStatus())
                 .createdDate(entity.getCreatedDate())
                 .createUser(entity.getCreateUser())

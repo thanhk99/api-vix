@@ -14,7 +14,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class WorkerJob {
     private UUID id;
-    private String jobType; // e.g., "MAIL", "CLEANUP", "EXPORT"
+    private String jobType; // e.g., "MAIL", "CLEANUP", "EXPORT_PARTNER", "EXPORT_CONTRACT"
     private String payload; // JSON data
     private String status; // PENDING, PROCESSING, COMPLETED, FAILED
     private int retryCount;
@@ -22,15 +22,28 @@ public class WorkerJob {
     private LocalDateTime nextRunTime;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    
+    private UUID createdBy;
+    private UUID departmentId;
+    private String result; // File path or result JSON
+    private String fileName; // Display file name
+    private Long fileSize; // Bytes
 
     public void markProcessing() {
         this.status = "PROCESSING";
         this.updatedAt = LocalDateTime.now();
     }
 
-    public void markCompleted() {
+    public void markCompleted(String result, String fileName, Long fileSize) {
         this.status = "COMPLETED";
+        this.result = result;
+        if (fileName != null) this.fileName = fileName;
+        if (fileSize != null) this.fileSize = fileSize;
         this.updatedAt = LocalDateTime.now();
+    }
+
+    public void markCompleted() {
+        markCompleted(this.result, this.fileName, this.fileSize);
     }
 
     public void markFailed(String errorLog, int maxRetries) {

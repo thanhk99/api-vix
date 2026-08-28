@@ -13,4 +13,6 @@ public interface CreditLimitHistoryRepository {
     Page<CreditLimitHistory> findByCreditLimitId(UUID creditLimitId, Pageable pageable);
     
     Page<CreditLimitHistory> findByFilters(UUID creditLimitId, LocalDateTime fromDate, LocalDateTime toDate, Pageable pageable);
+    
+    Page<CreditLimitHistory> findByGlobalFilters(java.util.List<UUID> creditLimitIds, String transactionType, LocalDateTime fromDate, LocalDateTime toDate, Pageable pageable);
 }

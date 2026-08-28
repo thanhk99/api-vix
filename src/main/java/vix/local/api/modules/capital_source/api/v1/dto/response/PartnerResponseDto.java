@@ -17,6 +17,7 @@ public class PartnerResponseDto {
     private String idCode;
     private LocalDate fistIssueDate;
     private LocalDate lastIssueDate;
+    private String changeReason;
     private String issueBy;
     private Integer changeCount;
     private String opLiscenseNo;
@@ -31,11 +32,18 @@ public class PartnerResponseDto {
     private LocalDate professionalStartDate;
     private LocalDate professionalEndDate;
     private String note;
+    private String depositoryMemberCode;
+    private String tradingGateway;
 
     private String status;
+    private Boolean isActive;
     private String createdBy;
     private String updatedBy;
     private LocalDate lastUpdated;
     private String approvedBy;
     private java.time.LocalDateTime approvedAt;
+
+    private java.math.BigDecimal totalPool;
+    private java.math.BigDecimal usedPool;
+    private java.math.BigDecimal remainPool;
 }

@@ -23,6 +23,12 @@ public class AuthorizationEntity {
 
     private Integer seqId;
 
+    @Column(name = "auth_type")
+    private String authType;
+
+    @Column(name = "parent_auth_id")
+    private UUID parentAuthId;
+
     @Column(name = "auth_name")
     private String authName;
 
@@ -35,6 +41,9 @@ public class AuthorizationEntity {
     @Column(name = "authissue_date")
     private LocalDate authissueDate;
 
+    @Column(name = "issue_place")
+    private String issuePlace;
+
     @Column(name = "authed_name")
     private String authedName;
 
@@ -44,8 +53,11 @@ public class AuthorizationEntity {
     @Column(name = "authed_issue_date")
     private LocalDate authedIssueDate;
 
-    @Column(name = "issue_place")
-    private String issuePlace;
+    @Column(name = "authed_issue_place")
+    private String authedIssuePlace;
+
+    @Column(name = "authed_position")
+    private String authedPosition;
 
     @Column(name = "auth_no")
     private String authNo;
@@ -56,11 +68,11 @@ public class AuthorizationEntity {
     @Column(name = "expiry_date")
     private LocalDate expiryDate;
 
-    @Column(name = "authed_position")
-    private String authedPosition;
-
     @Column(name = "scope")
     private String scope;
+
+    @Column(name = "note")
+    private String note;
 
     @Column(name = "status")
     private String status;

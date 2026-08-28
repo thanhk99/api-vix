@@ -14,6 +14,7 @@ import java.util.UUID;
 public class PartnerSignature {
     private UUID id;
     private UUID partnerId;
+    private UUID documentId;
     private String signFileName;
     private String signType;
     private String description;
@@ -28,19 +29,21 @@ public class PartnerSignature {
         if (this.effectiveDate == null) {
             throw new PartnerSignatureException("Ngày hiệu lực không được để trống");
         }
-        if (this.expiryDate == null) {
-            throw new PartnerSignatureException("Ngày hết hạn không được để trống");
-        }
-        if (this.effectiveDate.isAfter(this.expiryDate)) {
+        if (this.expiryDate != null && this.effectiveDate.isAfter(this.expiryDate)) {
             throw new PartnerSignatureException("Ngày kết thúc phải sau ngày bắt đầu");
         }
     }
 
     public void updateStatus() {
+        if ("DELETED".equals(this.status)) return;
         if (this.expiryDate != null && this.expiryDate.isBefore(LocalDate.now())) {
             this.status = "DUEDATE";
         } else {
-            this.status = "ACTIVE";
+            this.status = "APPROVED";
         }
+    }
+    
+    public void markAsDeleted() {
+        this.status = "DELETED";
     }
 }

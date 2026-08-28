@@ -9,5 +9,11 @@ public interface KunnRepository {
     Kunn save(Kunn kunn);
     Optional<Kunn> findById(UUID id);
     List<Kunn> findAll();
-    // Additional find methods can be added here if needed by the application service (e.g. find by partnerId, limitId)
+    org.springframework.data.domain.Page<Kunn> findAll(org.springframework.data.domain.Pageable pageable);
+    List<Kunn> findByLimitId(UUID limitId);
+    List<Kunn> findByCusId(UUID cusId);
+    List<Kunn> saveAll(List<Kunn> kunns);
+    java.math.BigDecimal sumPendingLnAmtByLimitId(UUID limitId, UUID excludeKunnId);
+    java.math.BigDecimal sumPendingLnAmtByContractId(UUID contractId, UUID excludeKunnId);
+    java.math.BigDecimal sumPendingLnAmtByPartnerId(UUID partnerId, UUID excludeKunnId);
 }

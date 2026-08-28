@@ -67,11 +67,15 @@ public class Kunn {
             }
         }
         
-        this.status = KunnStatus.PENDING;
+        this.status = KunnStatus.PENDING_APPROVAL;
         this.createdDate = LocalDateTime.now();
     }
 
     public void validateUpdate(BigDecimal remainLimit) {
+        if (this.status != KunnStatus.PENDING_APPROVAL) {
+            throw KunnException.badRequest("Chỉ được cập nhật KUNN ở trạng thái PENDING_APPROVAL");
+        }
+        
         if (lnAmt == null || lnAmt.compareTo(BigDecimal.ZERO) <= 0) {
             throw KunnException.badRequest("Số tiền giải ngân phải lớn hơn 0");
         }
@@ -88,8 +92,8 @@ public class Kunn {
     }
 
     public void approve(UUID approverId, BigDecimal currentRemainLimit) {
-        if (this.status != KunnStatus.PENDING) {
-            throw KunnException.badRequest("Chỉ được duyệt KUNN ở trạng thái PENDING");
+        if (this.status != KunnStatus.PENDING_APPROVAL) {
+            throw KunnException.badRequest("Chỉ được duyệt KUNN ở trạng thái PENDING_APPROVAL");
         }
 
         if (lnAmt == null || lnAmt.compareTo(BigDecimal.ZERO) <= 0) {
@@ -100,15 +104,43 @@ public class Kunn {
             throw KunnException.badRequest("Số tiền giải ngân không được vượt quá hạn mức còn lại tại thời điểm duyệt");
         }
 
-        this.status = KunnStatus.ACTIVE;
+        this.status = KunnStatus.APPROVED;
         this.approveUser = approverId;
         this.approveDate = LocalDateTime.now();
     }
 
-    public void cancel() {
-        if (this.status != KunnStatus.PENDING && this.status != KunnStatus.ACTIVE) {
-            throw KunnException.badRequest("Chỉ được huỷ KUNN ở trạng thái PENDING hoặc ACTIVE");
+    public void requestCancel() {
+        if (this.status != KunnStatus.PENDING_APPROVAL && this.status != KunnStatus.APPROVED) {
+            throw KunnException.badRequest("Chỉ được huỷ KUNN ở trạng thái PENDING_APPROVAL hoặc APPROVED");
         }
-        this.status = KunnStatus.CANCEL;
+        this.status = KunnStatus.PENDING_DELETE;
     }
+
+    public void approveCancel() {
+        if (this.status != KunnStatus.PENDING_DELETE) {
+            throw KunnException.badRequest("Chỉ được duyệt huỷ ở trạng thái PENDING_DELETE");
+        }
+        this.status = KunnStatus.DELETED;
+    }
+
+    public void rejectCancel() {
+        if (this.status != KunnStatus.PENDING_DELETE) {
+            throw KunnException.badRequest("Chỉ được từ chối huỷ ở trạng thái PENDING_DELETE");
+        }
+        this.status = KunnStatus.APPROVED;
+    }
+
+    public void forceDelete() {
+        this.status = KunnStatus.DELETED;
+    }
+
+    public void markAsPendingDelete() {
+        this.status = KunnStatus.PENDING_DELETE;
+    }
+
+    public void markAsActive() {
+        this.status = KunnStatus.APPROVED;
+    }
+    private String prepaymentNote;
+    private String note;
 }

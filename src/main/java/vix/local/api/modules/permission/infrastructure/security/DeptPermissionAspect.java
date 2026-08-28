@@ -34,13 +34,13 @@ public class DeptPermissionAspect {
     @Before("@annotation(requireDeptPermission)")
     public void checkPermission(JoinPoint joinPoint, RequireDeptPermission requireDeptPermission) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
-            throw new AccessDeniedException("Unauthorized");
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+            throw new org.springframework.security.authentication.InsufficientAuthenticationException("Phiên đăng nhập đã hết hạn hoặc chưa đăng nhập");
         }
 
         String email = auth.getName();
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new AccessDeniedException("User not found"));
+                .orElseThrow(() -> new org.springframework.security.authentication.InsufficientAuthenticationException("Tài khoản không tồn tại"));
 
         // parse roles from authentication
         List<String> roles = auth.getAuthorities().stream()

@@ -24,4 +24,6 @@ public class KunnRequestDto {
     private String purpose; // Mục đích
     private String intTerm; // Kỳ trả lãi
     private String prinTerm; // Kỳ trả gốc
+    private String prepaymentNote;
+    private String note;
 }

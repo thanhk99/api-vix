@@ -13,7 +13,6 @@ import vix.local.api.modules.permission.infrastructure.security.RequireDeptPermi
 import vix.local.api.modules.permission.domain.model.ResourceCode;
 import vix.local.api.modules.permission.domain.model.ActionCode;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -45,7 +44,7 @@ public class KunnController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @PostMapping("/{id}/approve")
+    @PutMapping("/{id}/approve")
     @RequireDeptPermission(resource = ResourceCode.CAPITAL_CONTRACT, action = ActionCode.APPROVE)
     @Operation(summary = "Duyệt Khế ước nhận nợ (KUNN)")
     public ResponseEntity<ApiResponse<KunnResponseDto>> approveKunn(
@@ -56,7 +55,7 @@ public class KunnController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @PostMapping("/{id}/cancel")
+    @DeleteMapping("/{id}")
     @RequireDeptPermission(resource = ResourceCode.CAPITAL_CONTRACT, action = ActionCode.DELETE)
     @Operation(summary = "Huỷ Khế ước nhận nợ (KUNN)")
     public ResponseEntity<ApiResponse<KunnResponseDto>> cancelKunn(
@@ -65,12 +64,50 @@ public class KunnController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
+    @GetMapping("/{id}")
+    @RequireDeptPermission(resource = ResourceCode.CAPITAL_CONTRACT, action = ActionCode.VIEW)
+    @Operation(summary = "Chi tiết Khế ước nhận nợ (KUNN)")
+    public ResponseEntity<ApiResponse<KunnResponseDto>> getKunnById(@PathVariable UUID id) {
+        KunnResponseDto response = kunnApplicationService.getKunnById(id);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
     @GetMapping
     @RequireDeptPermission(resource = ResourceCode.CAPITAL_CONTRACT, action = ActionCode.VIEW)
     @Operation(summary = "Lấy danh sách Khế ước nhận nợ (KUNN)")
-    public ResponseEntity<ApiResponse<List<KunnResponseDto>>> getAllKunns() {
-        // Note: For a production app, pagination should be used.
-        List<KunnResponseDto> response = kunnApplicationService.getAllKunns();
+    public ResponseEntity<ApiResponse<vix.local.api.shared.dto.PagedResponse<KunnResponseDto>>> getAllKunns(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size,
+                org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC,
+                        "createdDate"));
+        org.springframework.data.domain.Page<KunnResponseDto> pageData = kunnApplicationService.getAllKunns(pageable);
+
+        vix.local.api.shared.dto.PagedResponse<KunnResponseDto> response = vix.local.api.shared.dto.PagedResponse
+                .<KunnResponseDto>builder()
+                .content(pageData.getContent())
+                .pageNumber(pageData.getNumber())
+                .pageSize(pageData.getSize())
+                .totalElements(pageData.getTotalElements())
+                .build();
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PutMapping("/{id}/approve-delete")
+    @RequireDeptPermission(resource = ResourceCode.CAPITAL_CONTRACT, action = ActionCode.APPROVE)
+    @Operation(summary = "Duyệt huỷ Khế ước nhận nợ (KUNN)")
+    public ResponseEntity<ApiResponse<KunnResponseDto>> approveCancelKunn(
+            @PathVariable UUID id) {
+        KunnResponseDto response = kunnApplicationService.approveCancelKunn(id);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PutMapping("/{id}/reject-delete")
+    @RequireDeptPermission(resource = ResourceCode.CAPITAL_CONTRACT, action = ActionCode.APPROVE)
+    @Operation(summary = "Từ chối huỷ Khế ước nhận nợ (KUNN)")
+    public ResponseEntity<ApiResponse<KunnResponseDto>> rejectCancelKunn(
+            @PathVariable UUID id) {
+        KunnResponseDto response = kunnApplicationService.rejectCancelKunn(id);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.springframework.http.MediaType;
 
 @RestController
 @RequestMapping("/v1/documents")
@@ -32,7 +33,7 @@ public class DocumentController {
     // It's better to pass it in request or get it from token correctly.
     // For this example, we require companyId and departmentId from headers.
 
-    @PostMapping("/upload")
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Tải lên tài liệu", description = "Upload file lên MinIO storage cho từng phòng ban")
     public ResponseEntity<ApiResponse<DocumentResponse>> upload(
             @RequestParam("file") MultipartFile file,
@@ -41,7 +42,7 @@ public class DocumentController {
             Authentication auth) {
 
         String uploadedBy = auth.getName();
-        Document doc = documentService.uploadDocument(file, companyId, departmentId, uploadedBy);
+        Document doc = documentService.upload(file, companyId, departmentId, uploadedBy);
 
         DocumentResponse response = toResponse(doc);
         return ResponseEntity.ok(ApiResponse.success(response));
@@ -67,7 +68,7 @@ public class DocumentController {
     @DeleteMapping("/{id}")
     @Operation(summary = "Xóa tài liệu", description = "Xóa file khỏi database và MinIO storage")
     public ResponseEntity<ApiResponse<Void>> deleteDocument(@PathVariable UUID id) {
-        documentService.deleteDocument(id);
+        documentService.delete(id);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 

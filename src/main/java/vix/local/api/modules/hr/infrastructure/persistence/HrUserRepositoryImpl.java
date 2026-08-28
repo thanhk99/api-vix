@@ -70,7 +70,7 @@ public class HrUserRepositoryImpl implements HrUserRepository {
 
     @Override
     public HrUser save(HrUser user) {
-        return toDomain(jpaRepository.save(toEntity(user)));
+        return toDomain(jpaRepository.saveAndFlush(toEntity(user)));
     }
 
     private HrUser toDomain(HrUserEntity e) {
@@ -129,3 +129,4 @@ public class HrUserRepositoryImpl implements HrUserRepository {
                 .build();
     }
 }
+

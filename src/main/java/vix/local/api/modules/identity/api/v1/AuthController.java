@@ -29,6 +29,12 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success(authService.login(request)));
     }
 
+    @Operation(summary = "Refresh Token", description = "Lấy lại Access Token mới bằng Refresh Token.")
+    @PostMapping("/refresh-token")
+    public ResponseEntity<ApiResponse<AuthResponse>> refreshToken(@Valid @RequestBody vix.local.api.modules.identity.api.v1.dto.request.RefreshTokenRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(authService.refreshToken(request.getRefreshToken())));
+    }
+
     @Operation(summary = "Chọn phòng ban", description = "Được gọi khi user có nhiều phòng ban và chọn 1 phòng ban. Yêu cầu gửi kèm AccessToken ban đầu (hoặc truyền email từ FE, tạm thời dùng JWT cũ hoặc gửi email).")
     @PostMapping("/select-department")
     public ResponseEntity<ApiResponse<AuthResponse>> selectDepartment(

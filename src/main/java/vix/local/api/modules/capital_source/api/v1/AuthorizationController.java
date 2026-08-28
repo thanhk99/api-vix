@@ -44,7 +44,7 @@ public class AuthorizationController {
             @PathVariable UUID partnerId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, size, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
         Page<Authorization> authPage = partnerService.getAuthorizationsByPartnerId(partnerId, pageable);
 
         PagedResponse<Authorization> pagedResponse = PagedResponse.<Authorization>builder()

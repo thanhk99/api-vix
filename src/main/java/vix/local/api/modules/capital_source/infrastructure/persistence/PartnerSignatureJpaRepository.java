@@ -10,5 +10,6 @@ import java.util.UUID;
 
 @Repository
 public interface PartnerSignatureJpaRepository extends JpaRepository<PartnerSignatureEntity, UUID> {
+    Page<PartnerSignatureEntity> findByPartnerId(UUID partnerId, Pageable pageable);
     Page<PartnerSignatureEntity> findByPartnerIdOrderByUpdatedAtDesc(UUID partnerId, Pageable pageable);
 }

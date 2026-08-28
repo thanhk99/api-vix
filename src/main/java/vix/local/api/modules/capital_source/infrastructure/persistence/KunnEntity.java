@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "kunn")
+@Table(name = "kunn", schema = "capital_source")
 @Data
 @Builder
 @NoArgsConstructor
@@ -90,4 +90,11 @@ public class KunnEntity {
 
     @Column(name = "approve_user")
     private UUID approveUser;
+
+    @Column(name = "prepayment_note")
+    private String prepaymentNote;
+
+    @Column(name = "note")
+    private String note;
+
 }

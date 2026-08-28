@@ -52,7 +52,7 @@ public class HrDataSeeder implements CommandLineRunner {
             HrUser savedDirector = hrUserRepository.save(director);
 
             // 2.5 Cấp quyền DEPT_ADMIN cho Giám đốc
-            identityPort.upsertUserRole(savedDirector.getId(), savedBgd.getId(), UserRole.DEPT_ADMIN, true);
+            identityPort.upsertUserRole(savedDirector.getId(), savedBgd.getId(), UserRole.DIRECTOR, true);
 
             log.info("Đã tạo phòng Ban Giám đốc và tài khoản director@vix.local (Mật khẩu: 123456)");
         } else {
@@ -60,7 +60,7 @@ public class HrDataSeeder implements CommandLineRunner {
             hrUserRepository.findByEmail("director@vix.local").ifPresent(director -> {
                 if (identityPort.getUserRole(director.getId(), director.getDepartmentId()) == null) {
                     hrDepartmentRepository.findByCode("BGD").ifPresent(bgd -> {
-                        identityPort.upsertUserRole(director.getId(), bgd.getId(), UserRole.DEPT_ADMIN, true);
+                        identityPort.upsertUserRole(director.getId(), bgd.getId(), UserRole.DIRECTOR, true);
                         log.info("Đã tự động cập nhật Role cho director@vix.local (Role: DEPT_ADMIN)");
                     });
                 }
@@ -78,7 +78,7 @@ public class HrDataSeeder implements CommandLineRunner {
             if (user.getDepartmentId() == null) continue;
             UserRole existingRole = identityPort.getUserRole(user.getId(), user.getDepartmentId());
             if (existingRole == null) {
-                UserRole role = "director@vix.local".equals(user.getEmail()) ? UserRole.DEPT_ADMIN : UserRole.MEMBER;
+                UserRole role = "director@vix.local".equals(user.getEmail()) ? UserRole.DIRECTOR : UserRole.MEMBER;
                 identityPort.upsertUserRole(user.getId(), user.getDepartmentId(), role, true);
                 repaired++;
             }
@@ -88,3 +88,4 @@ public class HrDataSeeder implements CommandLineRunner {
         }
     }
 }
+

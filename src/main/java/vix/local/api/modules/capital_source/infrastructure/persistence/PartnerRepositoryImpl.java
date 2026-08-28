@@ -50,25 +50,35 @@ public class PartnerRepositoryImpl implements PartnerRepository {
         entity.setIdCode(partner.getIdCode());
         entity.setFistIssueDate(partner.getFistIssueDate());
         entity.setLastIssueDate(partner.getLastIssueDate());
+        entity.setChangeReason(partner.getChangeReason());
         entity.setIssueBy(partner.getIssueBy());
         entity.setChangeCount(partner.getChangeCount());
         entity.setOpLiscenseNo(partner.getOpLiscenseNo());
         entity.setOpIssueDate(partner.getOpIssueDate());
+        entity.setOpIssueBy(partner.getOpIssueBy());
         entity.setMobile(partner.getMobile());
         entity.setEmail(partner.getEmail());
         entity.setWebsite(partner.getWebsite());
+        entity.setFax(partner.getFax());
+        entity.setGeneralNote(partner.getGeneralNote());
         entity.setCusType(partner.getCusType());
         entity.setBusinessType(partner.getBusinessType());
         entity.setProfessionalInvestor(partner.getProfessionalInvestor());
         entity.setProfessionalStartDate(partner.getProfessionalStartDate());
         entity.setProfessionalEndDate(partner.getProfessionalEndDate());
         entity.setNote(partner.getNote());
+        entity.setDepositoryMemberCode(partner.getDepositoryMemberCode());
+        entity.setTradingGateway(partner.getTradingGateway());
         entity.setStatus(partner.getStatus());
+        entity.setIsActive(partner.getIsActive());
         entity.setCreatedBy(partner.getCreatedBy());
         entity.setUpdatedBy(partner.getUpdatedBy());
         entity.setLastUpdated(partner.getLastUpdated());
         entity.setApprovedBy(partner.getApprovedBy());
         entity.setApprovedAt(partner.getApprovedAt());
+        entity.setTotalPool(partner.getTotalPool());
+        entity.setUsedPool(partner.getUsedPool());
+        entity.setRemainPool(partner.getRemainPool());
         return entity;
     }
     
@@ -84,25 +94,35 @@ public class PartnerRepositoryImpl implements PartnerRepository {
                 .idCode(entity.getIdCode())
                 .fistIssueDate(entity.getFistIssueDate())
                 .lastIssueDate(entity.getLastIssueDate())
+                .changeReason(entity.getChangeReason())
                 .issueBy(entity.getIssueBy())
                 .changeCount(entity.getChangeCount())
                 .opLiscenseNo(entity.getOpLiscenseNo())
                 .opIssueDate(entity.getOpIssueDate())
+                .opIssueBy(entity.getOpIssueBy())
                 .mobile(entity.getMobile())
                 .email(entity.getEmail())
                 .website(entity.getWebsite())
+                .fax(entity.getFax())
+                .generalNote(entity.getGeneralNote())
                 .cusType(entity.getCusType())
                 .businessType(entity.getBusinessType())
                 .professionalInvestor(entity.getProfessionalInvestor())
                 .professionalStartDate(entity.getProfessionalStartDate())
                 .professionalEndDate(entity.getProfessionalEndDate())
                 .note(entity.getNote())
+                .depositoryMemberCode(entity.getDepositoryMemberCode())
+                .tradingGateway(entity.getTradingGateway())
                 .status(entity.getStatus())
+                .isActive(entity.getIsActive())
                 .createdBy(entity.getCreatedBy())
                 .updatedBy(entity.getUpdatedBy())
                 .lastUpdated(entity.getLastUpdated())
                 .approvedBy(entity.getApprovedBy())
                 .approvedAt(entity.getApprovedAt())
+                .totalPool(entity.getTotalPool())
+                .usedPool(entity.getUsedPool())
+                .remainPool(entity.getRemainPool())
                 .build();
     }
 }

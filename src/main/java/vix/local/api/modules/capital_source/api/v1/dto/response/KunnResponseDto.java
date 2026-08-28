@@ -14,6 +14,8 @@ import java.util.UUID;
 public class KunnResponseDto {
     private UUID id;
     private UUID cusId;
+    private String cusName;
+    private String cusIdCode;
     private String contactNo;
     private UUID limitId;
     private String lnContactNo;
@@ -37,4 +39,6 @@ public class KunnResponseDto {
     private LocalDateTime approveDate;
     private UUID approveUser;
     private String approveUserName;
+    private String prepaymentNote;
+    private String note;
 }

@@ -17,16 +17,27 @@ public class CreditLimit {
     public static final String STATUS_PENDING_APPROVAL = "PENDING_APPROVAL";
     public static final String STATUS_APPROVED = "APPROVED";
     public static final String STATUS_REJECTED = "REJECTED";
+    public static final String STATUS_PENDING_DELETE = "PENDING_DELETE";
     public static final String STATUS_DELETED = "DELETED";
+    public static final String STATUS_CLOSE = "CLOSE";
+
+    public String getEffectiveStatus() {
+        if (STATUS_DELETED.equals(this.status)) {
+            return STATUS_DELETED;
+        }
+        if (this.endDate != null && this.endDate.isBefore(LocalDate.now())) {
+            return STATUS_CLOSE;
+        }
+        return this.status;
+    }
 
     private UUID id;
-    private UUID partnerId;
-    private UUID parentId;
+    private UUID partnerId; // Có thể giữ lại để query nhanh hoặc bỏ
+    private UUID contractId; // Trỏ về CreditContract
     private String limitId; // Mã hạn mức
     private String poolName; // Tên hạn mức
     private String currency; // Đơn vị tiền tệ
-    private String poolType; // Loại hạn mức
-    private String contactNo; // Số hợp đồng
+    private String poolType; // Loại hạn mức (CLEAN, SECURED...)
     private BigDecimal creditRatio; // TL tài trợ/PA vay
     private String purpose; // Mục đích vay vốn
     private BigDecimal totalPool; // Hạn mức tổng
@@ -54,6 +65,10 @@ public class CreditLimit {
                 this.startDate.isAfter(this.endDate)) {
             throw new CreditLimitException("Ngày hết hạn phải sau ngày hiệu lực");
         }
+        
+        if ("MARGIN".equalsIgnoreCase(this.poolType) && this.purpose != null && this.purpose.contains(",")) {
+            throw new CreditLimitException("Hạn mức loại MARGIN chỉ được chọn 1 mục đích");
+        }
     }
 
     public void updateLimitAmount(BigDecimal newTotalPool) {
@@ -76,10 +91,38 @@ public class CreditLimit {
         this.status = STATUS_PENDING_APPROVAL;
     }
 
-    public void calculateRemainPool() {
+        public void calculateRemainPool() {
         if (this.totalPool != null && this.usedPool != null) {
             this.remainPool = this.totalPool.subtract(this.usedPool);
         }
+    }
+
+    public void consume(BigDecimal amount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new CreditLimitException("Số tiền sử dụng phải lớn hơn 0");
+        }
+        if (this.usedPool == null) this.usedPool = BigDecimal.ZERO;
+        
+        BigDecimal newUsed = this.usedPool.add(amount);
+        if (this.totalPool != null && newUsed.compareTo(this.totalPool) > 0) {
+            throw new CreditLimitException("Hạn mức đã sử dụng vượt quá tổng hạn mức");
+        }
+        this.usedPool = newUsed;
+        calculateRemainPool();
+    }
+
+    public void release(BigDecimal amount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new CreditLimitException("Số tiền hoàn lại phải lớn hơn 0");
+        }
+        if (this.usedPool == null) this.usedPool = BigDecimal.ZERO;
+        
+        BigDecimal newUsed = this.usedPool.subtract(amount);
+        if (newUsed.compareTo(BigDecimal.ZERO) < 0) {
+            newUsed = BigDecimal.ZERO;
+        }
+        this.usedPool = newUsed;
+        calculateRemainPool();
     }
     
     public void markAsApproved(UUID approverId) {
@@ -94,10 +137,28 @@ public class CreditLimit {
         this.approvedAt = LocalDateTime.now();
     }
     
-    public void markAsDeleted() {
+    public void markAsPendingDelete() {
         if (STATUS_DELETED.equals(this.status)) {
             throw new CreditLimitException("Hạn mức đã được xoá");
         }
+        this.status = STATUS_PENDING_DELETE;
+    }
+    
+    public void approveDelete() {
+        if (!STATUS_PENDING_DELETE.equals(this.status)) {
+            throw new CreditLimitException("Chỉ được duyệt xoá hạn mức ở trạng thái PENDING_DELETE");
+        }
+        this.status = STATUS_DELETED;
+    }
+    
+    public void rejectDelete() {
+        if (!STATUS_PENDING_DELETE.equals(this.status)) {
+            throw new CreditLimitException("Chỉ được từ chối xoá hạn mức ở trạng thái PENDING_DELETE");
+        }
+        this.status = STATUS_APPROVED;
+    }
+
+    public void forceDelete() {
         this.status = STATUS_DELETED;
     }
     

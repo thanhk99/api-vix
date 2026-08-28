@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import vix.local.api.modules.document.domain.exception.DocumentException;
+import vix.local.api.modules.document.application.port.StoragePort;
 
 import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
@@ -23,6 +24,9 @@ public class MinioStorageAdapter implements StoragePort {
 
     @Value("${minio.bucket}")
     private String bucket;
+
+    @Value("${minio.endpoint}")
+    private String endpoint;
 
     @Override
     public String store(MultipartFile file, String path) {
@@ -83,5 +87,11 @@ public class MinioStorageAdapter implements StoragePort {
         } catch (Exception e) {
             throw DocumentException.internalError("Lỗi tạo URL tải xuống: " + e.getMessage());
         }
+    }
+
+    @Override
+    public String getPublicUrl(String path) {
+        // Trả về public URL trực tiếp, sử dụng cho ảnh/avatar public
+        return endpoint + "/" + bucket + "/" + path;
     }
 }

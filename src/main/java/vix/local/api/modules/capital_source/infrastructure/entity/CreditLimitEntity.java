@@ -22,8 +22,8 @@ public class CreditLimitEntity {
     @Column(name = "partner_id")
     private UUID partnerId;
 
-    @Column(name = "parent_id")
-    private UUID parentId;
+    @Column(name = "contract_id")
+    private UUID contractId;
 
     @Column(name = "limit_id")
     private String limitId;  // Mã hạn mức
@@ -36,9 +36,6 @@ public class CreditLimitEntity {
 
     @Column(name = "pool_type")
     private String poolType;  // Loại hạn mức
-
-    @Column(name = "contact_no")
-    private String contactNo; // Số hợp đồng
 
     @Column(name = "credit_ratio")
     private BigDecimal creditRatio; // TL tài trợ/PA vay

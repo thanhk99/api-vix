@@ -52,52 +52,59 @@ public class AuthorizationRepositoryImpl implements AuthorizationRepository {
 
     private AuthorizationEntity convertToEntity(Authorization authorization) {
         if (authorization == null) return null;
-        AuthorizationEntity entity = AuthorizationEntity.builder()
-                .id(authorization.getId())
-                .partnerId(authorization.getPartnerId())
-                .seqId(authorization.getSeqId())
-                .authName(authorization.getAuthName())
-                .authPosition(authorization.getAuthPosition())
-                .authidNo(authorization.getAuthidNo())
-                .authissueDate(authorization.getAuthissueDate())
-                .authedName(authorization.getAuthedName())
-                .authedIdNo(authorization.getAuthedIdNo())
-                .authedIssueDate(authorization.getAuthedIssueDate())
-                .issuePlace(authorization.getIssuePlace())
-                .authNo(authorization.getAuthNo())
-                .effDate(authorization.getEffDate())
-                .expiryDate(authorization.getExpiryDate())
-                .authedPosition(authorization.getAuthedPosition())
-                .scope(authorization.getScope())
-                .status(authorization.getStatus())
-                .phone(authorization.getPhone())
-                .email(authorization.getEmail())
-                .build();
+        AuthorizationEntity entity = new AuthorizationEntity();
+        entity.setId(authorization.getId());
+        entity.setPartnerId(authorization.getPartnerId());
+        entity.setSeqId(authorization.getSeqId());
+        entity.setAuthType(authorization.getAuthType());
+        entity.setParentAuthId(authorization.getParentAuthId());
+        entity.setAuthName(authorization.getAuthName());
+        entity.setAuthPosition(authorization.getAuthPosition());
+        entity.setAuthidNo(authorization.getAuthidNo());
+        entity.setAuthissueDate(authorization.getAuthissueDate());
+        entity.setAuthedName(authorization.getAuthedName());
+        entity.setAuthedIdNo(authorization.getAuthedIdNo());
+        entity.setAuthedIssueDate(authorization.getAuthedIssueDate());
+        entity.setAuthedIssuePlace(authorization.getAuthedIssuePlace());
+        entity.setIssuePlace(authorization.getIssuePlace());
+        entity.setAuthNo(authorization.getAuthNo());
+        entity.setEffDate(authorization.getEffDate());
+        entity.setExpiryDate(authorization.getExpiryDate());
+        entity.setAuthedPosition(authorization.getAuthedPosition());
+        entity.setScope(authorization.getScope());
+        entity.setNote(authorization.getNote());
+        entity.setStatus(authorization.getStatus());
+        entity.setPhone(authorization.getPhone());
+        entity.setEmail(authorization.getEmail());
         return entity;
     }
 
     private Authorization convertToModel(AuthorizationEntity entity) {
         if (entity == null) return null;
-        return Authorization.builder()
-                .id(entity.getId())
-                .partnerId(entity.getPartnerId())
-                .seqId(entity.getSeqId())
-                .authName(entity.getAuthName())
-                .authPosition(entity.getAuthPosition())
-                .authidNo(entity.getAuthidNo())
-                .authissueDate(entity.getAuthissueDate())
-                .authedName(entity.getAuthedName())
-                .authedIdNo(entity.getAuthedIdNo())
-                .authedIssueDate(entity.getAuthedIssueDate())
-                .issuePlace(entity.getIssuePlace())
-                .authNo(entity.getAuthNo())
-                .effDate(entity.getEffDate())
-                .expiryDate(entity.getExpiryDate())
-                .authedPosition(entity.getAuthedPosition())
-                .scope(entity.getScope())
-                .status(entity.getStatus())
-                .phone(entity.getPhone())
-                .email(entity.getEmail())
-                .build();
+        Authorization auth = new Authorization();
+        auth.setId(entity.getId());
+        auth.setPartnerId(entity.getPartnerId());
+        auth.setSeqId(entity.getSeqId());
+        auth.setAuthType(entity.getAuthType());
+        auth.setParentAuthId(entity.getParentAuthId());
+        auth.setAuthName(entity.getAuthName());
+        auth.setAuthPosition(entity.getAuthPosition());
+        auth.setAuthidNo(entity.getAuthidNo());
+        auth.setAuthissueDate(entity.getAuthissueDate());
+        auth.setAuthedName(entity.getAuthedName());
+        auth.setAuthedIdNo(entity.getAuthedIdNo());
+        auth.setAuthedIssueDate(entity.getAuthedIssueDate());
+        auth.setAuthedIssuePlace(entity.getAuthedIssuePlace());
+        auth.setIssuePlace(entity.getIssuePlace());
+        auth.setAuthNo(entity.getAuthNo());
+        auth.setEffDate(entity.getEffDate());
+        auth.setExpiryDate(entity.getExpiryDate());
+        auth.setAuthedPosition(entity.getAuthedPosition());
+        auth.setScope(entity.getScope());
+        auth.setNote(entity.getNote());
+        auth.setStatus(entity.getStatus());
+        auth.setPhone(entity.getPhone());
+        auth.setEmail(entity.getEmail());
+        return auth;
     }
 }

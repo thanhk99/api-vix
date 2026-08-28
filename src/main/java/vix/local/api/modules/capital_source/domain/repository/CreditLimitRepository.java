@@ -11,17 +11,20 @@ public interface CreditLimitRepository {
     Page<CreditLimit> searchGlobal(
             UUID partnerId, 
             String limitId, 
-            String contactNo, 
+
             String poolType, 
             String status, 
             java.time.LocalDate startDate, 
             java.time.LocalDate endDate, 
             Pageable pageable);
     
-    java.util.List<CreditLimit> findByParentIdIn(java.util.List<UUID> parentIds);
+    Page<CreditLimit> findByContractId(UUID contractId, Pageable pageable);
+    java.util.List<CreditLimit> findByContractIdIn(java.util.List<UUID> contractIds);
     void deleteById(UUID id);
     CreditLimit findById(UUID id);
     
     java.util.List<CreditLimit> saveAll(java.util.List<CreditLimit> creditLimits);
     java.util.List<CreditLimit> findByPartnerIdAndStatus(UUID partnerId, String status);
+    java.util.List<CreditLimit> findAll();
+    CreditLimit findByLimitId(String limitId);
 }

@@ -11,6 +11,6 @@ import java.util.UUID;
 @Repository
 public interface PartnerJpaRepository extends JpaRepository<PartnerEntity, UUID> {
     
-    @Query("SELECT p FROM PartnerEntity p WHERE p.status != 'DELETED' OR p.status IS NULL ORDER BY p.lastUpdated DESC")
+    @Query("SELECT p FROM PartnerEntity p WHERE (p.status NOT IN ('DELETED', 'DRAFT') OR p.status IS NULL) AND (p.cusId NOT LIKE 'DRAFT_%' AND p.cusName != 'Bản nháp') ORDER BY p.lastUpdated DESC")
     Page<PartnerEntity> findAllActive(Pageable pageable);
 }

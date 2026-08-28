@@ -47,7 +47,7 @@ public class PartnerController {
                 .address(partner.getAddress())
                 .idCode(partner.getIdCode())
                 .fistIssueDate(partner.getFistIssueDate())
-                .lastIssueDate(partner.getLastIssueDate())
+                .lastIssueDate(partner.getLastIssueDate()).changeReason(partner.getChangeReason())
                 .issueBy(partner.getIssueBy())
                 .changeCount(partner.getChangeCount())
                 .opLiscenseNo(partner.getOpLiscenseNo())
@@ -60,14 +60,21 @@ public class PartnerController {
                 .professionalInvestor(partner.getProfessionalInvestor())
                 .professionalStartDate(partner.getProfessionalStartDate())
                 .professionalEndDate(partner.getProfessionalEndDate())
+                .depositoryMemberCode(partner.getDepositoryMemberCode())
+                .tradingGateway(partner.getTradingGateway())
                 .status(partner.getStatus())
+                .isActive(partner.getIsActive())
                 .createdBy(createdByName)
                 .updatedBy(updatedByName)
                 .lastUpdated(partner.getLastUpdated())
                 .approvedBy(approvedByName)
                 .approvedAt(partner.getApprovedAt())
+                .totalPool(partner.getTotalPool() != null ? partner.getTotalPool() : java.math.BigDecimal.ZERO)
+                .usedPool(partner.getUsedPool() != null ? partner.getUsedPool() : java.math.BigDecimal.ZERO)
+                .remainPool(partner.getRemainPool() != null ? partner.getRemainPool() : java.math.BigDecimal.ZERO)
                 .build();
     }
+
 
     private Map<UUID, String> getAllUserNames() {
         return userRepository.findAll().stream()
@@ -84,7 +91,7 @@ public class PartnerController {
     public ResponseEntity<ApiResponse<vix.local.api.shared.dto.PagedResponse<PartnerResponseDto>>> getAllPartners(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "id"));
         org.springframework.data.domain.Page<Partner> partnerPage = partnerService.getAllPartners(pageable);
         
         Map<UUID, String> userNames = getAllUserNames();
@@ -156,15 +163,61 @@ public class PartnerController {
     @RequireDeptPermission(resource = ResourceCode.CAPITAL_PARTNER, action = ActionCode.APPROVE)
     @Operation(summary = "Phê duyệt đối tác")
     public ResponseEntity<ApiResponse<PartnerResponseDto>> approvePartner(
-            @PathVariable UUID id, 
+            @PathVariable UUID id,
             org.springframework.security.core.Authentication auth) {
         UUID approverId = null;
         if (auth != null && auth.getName() != null) {
             approverId = userRepository.findByEmail(auth.getName()).map(User::getId).orElse(null);
         }
-        
         Partner approved = partnerService.approvePartner(id, approverId);
+        
         Map<UUID, String> userNames = getAllUserNames();
+        
         return ResponseEntity.ok(ApiResponse.success(mapToDto(approved, userNames)));
+    }
+
+    @PutMapping("/{id}/reject")
+    @RequireDeptPermission(resource = ResourceCode.CAPITAL_PARTNER, action = ActionCode.APPROVE)
+    @Operation(summary = "Từ chối đối tác")
+    public ResponseEntity<ApiResponse<PartnerResponseDto>> rejectPartner(
+            @PathVariable UUID id,
+            @RequestBody(required = false) java.util.Map<String, Object> body,
+            org.springframework.security.core.Authentication auth) {
+        UUID rejecterId = null;
+        if (auth != null && auth.getName() != null) {
+            rejecterId = userRepository.findByEmail(auth.getName()).map(User::getId).orElse(null);
+        }
+        Partner rejected = partnerService.rejectPartner(id, rejecterId, body);
+        
+        Map<UUID, String> userNames = getAllUserNames();
+        
+        return ResponseEntity.ok(ApiResponse.success(mapToDto(rejected, userNames)));
+    }
+    
+    @PutMapping("/{id}/approve-delete")
+    @RequireDeptPermission(resource = ResourceCode.CAPITAL_PARTNER, action = ActionCode.APPROVE)
+    @Operation(summary = "Duyệt xoá đối tác")
+    public ResponseEntity<ApiResponse<Void>> approveDeletePartner(@PathVariable UUID id) {
+        partnerService.approveDeletePartner(id);
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
+
+    @PutMapping("/{id}/reject-delete")
+    @RequireDeptPermission(resource = ResourceCode.CAPITAL_PARTNER, action = ActionCode.APPROVE)
+    @Operation(summary = "Từ chối xóa Đối tác")
+    public ResponseEntity<ApiResponse<Void>> rejectDeletePartner(@PathVariable UUID id) {
+        partnerService.rejectDeletePartner(id);
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
+
+    @PutMapping("/{id}/pool")
+    @RequireDeptPermission(resource = ResourceCode.CAPITAL_PARTNER, action = ActionCode.UPDATE)
+    @Operation(summary = "Thiết lập tổng hạn mức Đối tác")
+    public ResponseEntity<ApiResponse<PartnerResponseDto>> setPartnerPool(
+            @PathVariable UUID id,
+            @RequestParam java.math.BigDecimal totalPool) {
+        Partner partner = partnerService.setPartnerPool(id, totalPool);
+        Map<UUID, String> userNames = getAllUserNames();
+        return ResponseEntity.ok(ApiResponse.success(mapToDto(partner, userNames)));
     }
 }

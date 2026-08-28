@@ -29,7 +29,7 @@ public class PartnerSignatureRepositoryImpl implements PartnerSignatureRepositor
 
     @Override
     public Page<PartnerSignature> findByPartnerId(UUID partnerId, Pageable pageable) {
-        return jpaRepository.findByPartnerIdOrderByUpdatedAtDesc(partnerId, pageable)
+        return jpaRepository.findByPartnerId(partnerId, pageable)
                 .map(this::convertToModel);
     }
 
@@ -43,6 +43,7 @@ public class PartnerSignatureRepositoryImpl implements PartnerSignatureRepositor
         PartnerSignatureEntity entity = new PartnerSignatureEntity();
         entity.setId(model.getId());
         entity.setPartnerId(model.getPartnerId());
+        entity.setDocumentId(model.getDocumentId());
         entity.setSignFileName(model.getSignFileName());
         entity.setSignType(model.getSignType());
         entity.setDescription(model.getDescription());
@@ -60,6 +61,7 @@ public class PartnerSignatureRepositoryImpl implements PartnerSignatureRepositor
         return PartnerSignature.builder()
                 .id(entity.getId())
                 .partnerId(entity.getPartnerId())
+                .documentId(entity.getDocumentId())
                 .signFileName(entity.getSignFileName())
                 .signType(entity.getSignType())
                 .description(entity.getDescription())

@@ -7,20 +7,22 @@ import org.springframework.web.multipart.MultipartFile;
 import vix.local.api.modules.document.domain.exception.DocumentException;
 import vix.local.api.modules.document.domain.model.Document;
 import vix.local.api.modules.document.domain.repository.DocumentRepository;
-import vix.local.api.modules.document.infrastructure.storage.StoragePort;
+import vix.local.api.modules.document.application.port.DocumentPort;
+import vix.local.api.modules.document.application.port.StoragePort;
 
 import java.util.List;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class DocumentApplicationService {
+public class DocumentApplicationService implements DocumentPort {
 
     private final DocumentRepository documentRepository;
     private final StoragePort storagePort;
 
+    @Override
     @Transactional
-    public Document uploadDocument(MultipartFile file, UUID companyId, UUID departmentId, String uploadedBy) {
+    public Document upload(MultipartFile file, UUID companyId, UUID departmentId, String uploadedBy) {
         if (file.isEmpty()) {
             throw DocumentException.badRequest("File không được trống");
         }
@@ -60,13 +62,27 @@ public class DocumentApplicationService {
                 .orElseThrow(() -> DocumentException.notFound("Không tìm thấy tài liệu"));
     }
 
+    @Override
     public String getDownloadUrl(UUID id) {
         Document document = getDocumentById(id);
         return storagePort.getUrl(document.getStoragePath());
     }
 
+    @Override
+    public String getPublicUrl(UUID id) {
+        Document document = getDocumentById(id);
+        return storagePort.getPublicUrl(document.getStoragePath());
+    }
+
+    @Override
+    public java.io.InputStream loadDocument(UUID id) {
+        Document document = getDocumentById(id);
+        return storagePort.load(document.getStoragePath());
+    }
+
+    @Override
     @Transactional
-    public void deleteDocument(UUID id) {
+    public void delete(UUID id) {
         Document document = getDocumentById(id);
         storagePort.delete(document.getStoragePath());
         documentRepository.deleteById(id);

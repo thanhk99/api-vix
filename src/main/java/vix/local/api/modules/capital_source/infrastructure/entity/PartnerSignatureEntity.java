@@ -23,6 +23,9 @@ public class PartnerSignatureEntity {
     @Column(name = "partner_id")
     private UUID partnerId;
 
+    @Column(name = "document_id")
+    private UUID documentId;
+
     @Column(name = "sign_file_name")
     private String signFileName;
 

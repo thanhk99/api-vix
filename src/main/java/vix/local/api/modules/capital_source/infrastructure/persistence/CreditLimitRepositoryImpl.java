@@ -32,20 +32,26 @@ public class CreditLimitRepositoryImpl implements CreditLimitRepository {
     public Page<CreditLimit> searchGlobal(
             UUID partnerId, 
             String limitId, 
-            String contactNo, 
+
             String poolType, 
             String status, 
             java.time.LocalDate startDate, 
             java.time.LocalDate endDate, 
             Pageable pageable) {
-        return creditLimitJpaRepository.searchGlobal(partnerId, limitId, contactNo, poolType, status, startDate, endDate, pageable)
+        return creditLimitJpaRepository.searchGlobal(partnerId, limitId,poolType, status, startDate, endDate, pageable)
                 .map(this::convertToModel);
     }
 
     @Override
-    public java.util.List<CreditLimit> findByParentIdIn(java.util.List<UUID> parentIds) {
-        if (parentIds == null || parentIds.isEmpty()) return java.util.Collections.emptyList();
-        return creditLimitJpaRepository.findByParentIdInAndStatusNot(parentIds, vix.local.api.modules.capital_source.domain.model.CreditLimit.STATUS_DELETED).stream()
+    public Page<CreditLimit> findByContractId(UUID contractId, Pageable pageable) {
+        return creditLimitJpaRepository.findByContractId(contractId, pageable)
+                .map(this::convertToModel);
+    }
+
+    @Override
+    public java.util.List<CreditLimit> findByContractIdIn(java.util.List<UUID> contractIds) {
+        if (contractIds == null || contractIds.isEmpty()) return java.util.Collections.emptyList();
+        return creditLimitJpaRepository.findByContractIdInAndStatusNot(contractIds, vix.local.api.modules.capital_source.domain.model.CreditLimit.STATUS_DELETED).stream()
                 .map(this::convertToModel)
                 .toList();
     }
@@ -74,16 +80,31 @@ public class CreditLimitRepositoryImpl implements CreditLimitRepository {
                 .toList();
     }
 
+    @Override
+    public java.util.List<CreditLimit> findAll() {
+        return creditLimitJpaRepository.findAll().stream()
+                .map(this::convertToModel)
+                .toList();
+    }
+
+    @Override
+    public CreditLimit findByLimitId(String limitId) {
+        if (limitId == null || limitId.isBlank()) return null;
+        return creditLimitJpaRepository.findFirstByLimitId(limitId.trim())
+                .map(this::convertToModel)
+                .orElse(null);
+    }
+
     private CreditLimitEntity convertToEntity(CreditLimit creditLimit) {
         CreditLimitEntity entity = CreditLimitEntity.builder()
                 .id(creditLimit.getId())
                 .partnerId(creditLimit.getPartnerId())
-                .parentId(creditLimit.getParentId())
+                .contractId(creditLimit.getContractId())
                 .limitId(creditLimit.getLimitId())
                 .poolName(creditLimit.getPoolName())
                 .currency(creditLimit.getCurrency())
                 .poolType(creditLimit.getPoolType())
-                .contactNo(creditLimit.getContactNo())
+                
                 .creditRatio(creditLimit.getCreditRatio())
                 .purpose(creditLimit.getPurpose())
                 .totalPool(creditLimit.getTotalPool())
@@ -106,12 +127,12 @@ public class CreditLimitRepositoryImpl implements CreditLimitRepository {
         return CreditLimit.builder()
                 .id(entity.getId())
                 .partnerId(entity.getPartnerId())
-                .parentId(entity.getParentId())
+                .contractId(entity.getContractId())
                 .limitId(entity.getLimitId())
                 .poolName(entity.getPoolName())
                 .currency(entity.getCurrency())
                 .poolType(entity.getPoolType())
-                .contactNo(entity.getContactNo())
+                
                 .creditRatio(entity.getCreditRatio())
                 .purpose(entity.getPurpose())
                 .totalPool(entity.getTotalPool())

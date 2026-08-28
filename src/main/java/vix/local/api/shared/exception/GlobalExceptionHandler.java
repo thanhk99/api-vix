@@ -59,6 +59,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(ex.getStatus()).body(ApiResponse.error(ex.getMessage()));
     }
 
+    @ExceptionHandler(vix.local.api.modules.capital_source.domain.exception.KunnException.class)
+    public ResponseEntity<ApiResponse<Void>> handleKunnException(vix.local.api.modules.capital_source.domain.exception.KunnException ex) {
+        return ResponseEntity.status(ex.getStatus()).body(ApiResponse.error(ex.getMessage()));
+    }
+
     @ExceptionHandler(AuthorizationException.class)
     public ResponseEntity<ApiResponse<Void>> handleAuthorizationException(AuthorizationException ex) {
         return ResponseEntity.status(ex.getStatus()).body(ApiResponse.error(ex.getMessage()));
@@ -87,6 +92,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AuditException.class)
     public ResponseEntity<ApiResponse<Void>> handleAuditException(AuditException ex) {
         return ResponseEntity.status(ex.getStatus()).body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(org.springframework.security.core.AuthenticationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAuthenticationException(org.springframework.security.core.AuthenticationException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error(ex.getMessage() != null ? ex.getMessage() : "Phiên đăng nhập đã hết hạn hoặc không hợp lệ"));
     }
 
     @ExceptionHandler(AccessDeniedException.class)

@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "documents") // Schema target from TenantContext
+@Table(name = "documents", schema = "public")
 @Data
 @Builder
 @NoArgsConstructor

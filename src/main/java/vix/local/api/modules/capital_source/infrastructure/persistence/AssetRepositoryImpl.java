@@ -1,11 +1,14 @@
 package vix.local.api.modules.capital_source.infrastructure.persistence;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import vix.local.api.modules.capital_source.domain.model.Asset;
 import vix.local.api.modules.capital_source.domain.repository.AssetRepository;
 import vix.local.api.modules.capital_source.infrastructure.entity.AssetEntity;
-import java.util.List;
+
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -22,17 +25,19 @@ public class AssetRepositoryImpl implements AssetRepository {
     }
 
     @Override
-    public List<Asset> findByPartnerId(UUID partnerId) {
-        return assetJpaRepository.findByPartnerId(partnerId).stream()
-                .map(this::convertToModel)
-                .toList();
+    public Optional<Asset> findByAssetId(String assetId) {
+        return assetJpaRepository.findByAssetId(assetId).map(this::convertToModel);
     }
 
     @Override
-    public List<Asset> findByCreditLimitId(UUID creditLimitId) {
-        return assetJpaRepository.findByCreditLimitId(creditLimitId).stream()
-                .map(this::convertToModel)
-                .toList();
+    public boolean existsByAssetId(String assetId) {
+        return assetJpaRepository.existsByAssetId(assetId);
+    }
+
+    @Override
+    public Page<Asset> findByFilters(String assetId, String assetType, String symbol, String status, Pageable pageable) {
+        return assetJpaRepository.findByFilters(assetId, assetType, symbol, status, pageable)
+                .map(this::convertToModel);
     }
 
     @Override
@@ -41,47 +46,70 @@ public class AssetRepositoryImpl implements AssetRepository {
     }
 
     @Override
-    public Asset findById(UUID id) {
-        return convertToModel(assetJpaRepository.findById(id).orElse(null));
+    public Optional<Asset> findById(UUID id) {
+        return assetJpaRepository.findById(id).map(this::convertToModel);
+    }
+
+    @Override
+    public long count() {
+        return assetJpaRepository.count();
     }
 
     private AssetEntity convertToEntity(Asset asset) {
-        AssetEntity entity = AssetEntity.builder()
+        if (asset == null) return null;
+        return AssetEntity.builder()
                 .id(asset.getId())
-                .partnerId(asset.getPartnerId())
-                .creditLimitId(asset.getCreditLimitId())
                 .assetId(asset.getAssetId())
                 .assetType(asset.getAssetType())
+                .symbol(asset.getSymbol())
+                .currency(asset.getCurrency())
                 .issuer(asset.getIssuer())
                 .issuerCode(asset.getIssuerCode())
                 .parValue(asset.getParValue())
+                .marketPrice(asset.getMarketPrice())
+                .haircutRate(asset.getHaircutRate())
+                .totalQuantity(asset.getTotalQuantity())
+                .availQuantity(asset.getAvailQuantity())
+                .pledgedQuantity(asset.getPledgedQuantity())
                 .issueDate(asset.getIssueDate())
                 .maturityDate(asset.getMaturityDate())
                 .callDate(asset.getCallDate())
                 .couponType(asset.getCouponType())
                 .couponRate(asset.getCouponRate())
                 .interestPayTerm(asset.getInterestPayTerm())
+                .note(asset.getNote())
+                .status(asset.getStatus())
+                .createdBy(asset.getCreatedBy())
+                .updatedBy(asset.getUpdatedBy())
                 .build();
-        return entity;
     }
 
     private Asset convertToModel(AssetEntity entity) {
         if (entity == null) return null;
         return Asset.builder()
                 .id(entity.getId())
-                .partnerId(entity.getPartnerId())
-                .creditLimitId(entity.getCreditLimitId())
                 .assetId(entity.getAssetId())
                 .assetType(entity.getAssetType())
+                .symbol(entity.getSymbol())
+                .currency(entity.getCurrency())
                 .issuer(entity.getIssuer())
                 .issuerCode(entity.getIssuerCode())
                 .parValue(entity.getParValue())
+                .marketPrice(entity.getMarketPrice())
+                .haircutRate(entity.getHaircutRate())
+                .totalQuantity(entity.getTotalQuantity())
+                .availQuantity(entity.getAvailQuantity())
+                .pledgedQuantity(entity.getPledgedQuantity())
                 .issueDate(entity.getIssueDate())
                 .maturityDate(entity.getMaturityDate())
                 .callDate(entity.getCallDate())
                 .couponType(entity.getCouponType())
                 .couponRate(entity.getCouponRate())
                 .interestPayTerm(entity.getInterestPayTerm())
+                .note(entity.getNote())
+                .status(entity.getStatus())
+                .createdBy(entity.getCreatedBy())
+                .updatedBy(entity.getUpdatedBy())
                 .build();
     }
 }

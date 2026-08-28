@@ -44,6 +44,33 @@ public class AuthApplicationService implements AuthPort {
             throw IdentityException.unauthorized("Tài khoản đã bị khóa hoặc chưa kích hoạt");
         }
 
+        return generateAuthResponseForUser(user);
+    }
+
+    @Transactional(readOnly = true)
+    public AuthResponse refreshToken(String refreshToken) {
+        if (!jwtUtil.validateToken(refreshToken)) {
+            throw IdentityException.unauthorized("Refresh token không hợp lệ hoặc đã hết hạn");
+        }
+
+        String email;
+        try {
+            email = jwtUtil.extractEmail(refreshToken);
+        } catch (Exception e) {
+            throw IdentityException.unauthorized("Refresh token không hợp lệ");
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> IdentityException.unauthorized("Tài khoản không tồn tại"));
+
+        if (user.getStatus() != UserStatus.ACTIVE) {
+            throw IdentityException.unauthorized("Tài khoản đã bị khóa hoặc chưa kích hoạt");
+        }
+
+        return generateAuthResponseForUser(user);
+    }
+
+    private AuthResponse generateAuthResponseForUser(User user) {
         List<AuthResponse.DepartmentInfo> deptInfos = new ArrayList<>();
         String token = null;
         String route = null;

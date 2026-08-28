@@ -20,7 +20,7 @@ public class WorkerJobEntity {
     @Id
     private UUID id;
 
-    @Column(nullable = false)
+    @Column(name = "job_type", nullable = false)
     private String jobType;
 
     @Column(columnDefinition = "TEXT")
@@ -29,16 +29,34 @@ public class WorkerJobEntity {
     @Column(nullable = false)
     private String status;
 
+    @Column(name = "retry_count")
     private int retryCount;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "error_log", columnDefinition = "TEXT")
     private String errorLog;
 
+    @Column(name = "next_run_time")
     private LocalDateTime nextRunTime;
 
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_by")
+    private UUID createdBy;
+
+    @Column(name = "department_id")
+    private UUID departmentId;
+
+    @Column(columnDefinition = "TEXT")
+    private String result;
+
+    @Column(name = "file_name")
+    private String fileName;
+
+    @Column(name = "file_size")
+    private Long fileSize;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     @PrePersist

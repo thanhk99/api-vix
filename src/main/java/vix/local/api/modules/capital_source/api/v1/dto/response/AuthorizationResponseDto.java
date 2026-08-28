@@ -10,6 +10,7 @@ import java.util.UUID;
 public class AuthorizationResponseDto {
     private UUID id;
     private Integer seqId;
+    private UUID parentAuthId;
     private String authName;
     private String authPosition;
     private String authidNo;
