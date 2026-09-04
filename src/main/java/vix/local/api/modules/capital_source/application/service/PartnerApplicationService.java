@@ -39,6 +39,7 @@ public class PartnerApplicationService {
     private final vix.local.api.modules.document.application.port.DocumentPort documentPort;
     
     private final vix.local.api.modules.capital_source.domain.repository.CreditContractRepository contractRepository;
+    private final vix.local.api.modules.capital_source.domain.service.PartnerDomainService partnerDomainService;
 
 
     // QuÃÂ¡ÃÂºÃÂ£n lÃÆÃÂ½ chÃÂ¡ÃÂ»ÃÂ¯ kÃÆÃÂ½ cho ÃâÃ¢â¬ËÃÂ¡ÃÂ»Ã¢â¬Ëi tÃÆÃÂ¡c
@@ -89,18 +90,13 @@ public class PartnerApplicationService {
     }
 
     public Partner createPartner(Partner partner) {
-        // Validate partner
-        partner.validatePartner();
+        // Domain validation (quy tắc nghiệp vụ đối tác + tính duy nhất Mã đơn vị GD)
+        partnerDomainService.validateForCreation(partner);
 
-        // Đặt trạng thái mặc định nếu không phải DRAFT
-        if (!Partner.STATUS_DRAFT.equals(partner.getStatus())) {
-            partner.setStatus(Partner.STATUS_PENDING_APPROVAL);
-        }
-        if (partner.getTotalPool() == null) partner.setTotalPool(java.math.BigDecimal.ZERO);
-        partner.setUsedPool(java.math.BigDecimal.ZERO);
-        partner.setRemainPool(partner.getTotalPool());
+        // Khởi tạo trạng thái và hạn mức ban đầu theo nghiệp vụ Domain
+        partner.initializeForCreation();
 
-        // TÃƒÂ¡Ã‚ÂºÃ‚Â¡o Ãƒâ€žÃ¢â‚¬ËœÃƒÂ¡Ã‚Â»Ã¢â‚¬Ëœi tÃƒÆ’Ã‚Â¡c mÃƒÂ¡Ã‚Â»Ã¢â‚¬Âºi
+        // Lưu đối tác mới
         return partnerRepository.save(partner);
     }
     
@@ -109,6 +105,9 @@ public class PartnerApplicationService {
         if (partner == null) {
             throw new vix.local.api.modules.capital_source.domain.exception.PartnerException("Không tìm thấy đối tác");
         }
+
+        // Domain validation: Kiểm tra tính duy nhất của Mã đơn vị GD (trừ đối tác hiện tại)
+        partnerDomainService.validateBranchCusIdUniqueness(updateRequest.getBranchCusId(), id);
         
         // Lưu snapshot trạng thái gốc vào changeReason trước khi cập nhật
         try {
@@ -137,7 +136,7 @@ public class PartnerApplicationService {
             snapshot.put("tradingGateway", partner.getTradingGateway());
             snapshot.put("generalNote", partner.getGeneralNote());
             
-            partner.setChangeReason(mapper.writeValueAsString(snapshot));
+            partner.setNote(mapper.writeValueAsString(snapshot));
         } catch (Exception ignored) {
         }
         
@@ -149,13 +148,18 @@ public class PartnerApplicationService {
         partner.setAddress(updateRequest.getAddress());
         partner.setIdCode(updateRequest.getIdCode());
         partner.setFistIssueDate(updateRequest.getFistIssueDate());
-        partner.setLastIssueDate(updateRequest.getLastIssueDate());
-        partner.setIssueBy(updateRequest.getIssueBy());
-        if (partner.getChangeCount() == null) {
-            partner.setChangeCount(1);
-        } else {
-            partner.setChangeCount(partner.getChangeCount() + 1);
+        if (updateRequest.getChangeCount() != null) {
+            partner.setChangeCount(updateRequest.getChangeCount());
         }
+        if (partner.getChangeCount() == null || partner.getChangeCount() == 0) {
+            partner.setChangeCount(0);
+            partner.setLastIssueDate(updateRequest.getFistIssueDate() != null ? updateRequest.getFistIssueDate() : updateRequest.getLastIssueDate());
+            partner.setChangeReason("");
+        } else {
+            partner.setLastIssueDate(updateRequest.getLastIssueDate() != null ? updateRequest.getLastIssueDate() : updateRequest.getFistIssueDate());
+            partner.setChangeReason(updateRequest.getChangeReason() != null ? updateRequest.getChangeReason() : "");
+        }
+        partner.setIssueBy(updateRequest.getIssueBy());
         partner.setOpLiscenseNo(updateRequest.getOpLiscenseNo());
         partner.setOpIssueDate(updateRequest.getOpIssueDate());
         partner.setOpIssueBy(updateRequest.getOpIssueBy());
@@ -183,6 +187,16 @@ public class PartnerApplicationService {
         partner.validatePartner();
         
         return partnerRepository.save(partner);
+    }
+
+    public java.util.Map<String, Object> checkDuplicate(String cusId, String branchCusId, UUID excludeId) {
+        boolean branchCusIdDuplicate = partnerDomainService.isBranchCusIdDuplicate(branchCusId, excludeId);
+
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        result.put("cusIdDuplicate", false);
+        result.put("branchCusIdDuplicate", branchCusIdDuplicate);
+        result.put("isDuplicate", branchCusIdDuplicate);
+        return result;
     }
     
     public Partner updateCustomerType(UUID id, Partner updateRequest) {
@@ -289,6 +303,7 @@ public class PartnerApplicationService {
             }
         }
         
+        partner.setNote(null);
         return partnerRepository.save(partner);
     }
 
@@ -306,6 +321,13 @@ public class PartnerApplicationService {
         java.util.Map<String, Object> snapshot = null;
         if (body != null && body.get("snapshot") instanceof java.util.Map) {
             snapshot = (java.util.Map<String, Object>) body.get("snapshot");
+        } else if (partner.getNote() != null && partner.getNote().startsWith("{")) {
+            try {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                mapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
+                snapshot = mapper.readValue(partner.getNote(), new com.fasterxml.jackson.core.type.TypeReference<java.util.Map<String, Object>>() {});
+            } catch (Exception ignored) {
+            }
         } else if (partner.getChangeReason() != null && partner.getChangeReason().startsWith("{")) {
             try {
                 com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
@@ -348,6 +370,7 @@ public class PartnerApplicationService {
             
             partner.setStatus(Partner.STATUS_APPROVED);
             partner.setChangeReason(null);
+            partner.setNote(null);
             partner.setApprovedBy(rejecterId);
             partner.setApprovedAt(java.time.LocalDateTime.now());
             return partnerRepository.save(partner);

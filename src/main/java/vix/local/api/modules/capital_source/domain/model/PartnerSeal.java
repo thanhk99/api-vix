@@ -24,6 +24,7 @@ public class PartnerSeal {
     private LocalDate expiryDate;
     private String status;
     private UUID updatedBy;
+    private String updatedByName;
     private java.time.LocalDateTime createdAt;
     private java.time.LocalDateTime updatedAt;
 
@@ -31,8 +32,8 @@ public class PartnerSeal {
         if (this.effectiveDate == null) {
             throw new PartnerSealException("Ngày hiệu lực không được để trống");
         }
-        if (this.expiryDate != null && this.effectiveDate.isAfter(this.expiryDate)) {
-            throw new PartnerSealException("Ngày kết thúc phải sau ngày bắt đầu");
+        if (this.expiryDate != null && !this.expiryDate.isAfter(this.effectiveDate)) {
+            throw new PartnerSealException("Ngày hết hạn phải lớn hơn ngày hiệu lực");
         }
     }
 

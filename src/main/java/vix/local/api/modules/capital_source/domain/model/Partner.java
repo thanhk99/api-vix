@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import vix.local.api.modules.capital_source.domain.exception.PartnerException;
+import vix.local.api.modules.capital_source.domain.repository.PartnerRepository;
 
 import java.time.LocalDate;
 import java.util.UUID;
@@ -67,6 +68,36 @@ public class Partner {
     private java.math.BigDecimal remainPool;
 
     // Business rules methods
+    public void initializeForCreation() {
+        if (!STATUS_DRAFT.equals(this.status)) {
+            this.status = STATUS_PENDING_APPROVAL;
+        }
+        if (this.totalPool == null) {
+            this.totalPool = java.math.BigDecimal.ZERO;
+        }
+        this.usedPool = java.math.BigDecimal.ZERO;
+        this.remainPool = this.totalPool;
+        if (this.changeCount == null || this.changeCount == 0) {
+            this.changeCount = 0;
+            if (this.fistIssueDate != null && this.lastIssueDate == null) {
+                this.lastIssueDate = this.fistIssueDate;
+            }
+        }
+    }
+
+    public void validateBranchCusIdUniqueness(PartnerRepository repository) {
+        if (this.branchCusId == null || this.branchCusId.trim().isEmpty()) {
+            return;
+        }
+        String cleanBranchCusId = this.branchCusId.trim();
+        boolean exists = (this.id != null)
+                ? repository.existsByBranchCusIdAndIdNot(cleanBranchCusId, this.id)
+                : repository.existsByBranchCusId(cleanBranchCusId);
+        if (exists) {
+            throw new PartnerException("Mã đơn vị GD đã tồn tại trong hệ thống!");
+        }
+    }
+
     public void validatePartner() {
         if (STATUS_DRAFT.equals(this.status)) {
             return;

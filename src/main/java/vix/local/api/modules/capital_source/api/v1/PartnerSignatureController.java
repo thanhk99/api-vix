@@ -40,6 +40,23 @@ public class PartnerSignatureController {
         return null;
     }
 
+    private void populateUserNames(java.util.List<PartnerSignature> signatures) {
+        if (signatures == null || signatures.isEmpty()) return;
+        java.util.Map<UUID, String> cache = new java.util.HashMap<>();
+        signatures.forEach(s -> {
+            if (s.getUpdatedBy() != null) {
+                String name = cache.computeIfAbsent(s.getUpdatedBy(), id -> 
+                    userRepository.findById(id).map(u -> 
+                        (u.getFullName() != null && !u.getFullName().trim().isEmpty()) 
+                            ? u.getFullName() 
+                            : (u.getEmail() != null ? u.getEmail() : id.toString())
+                    ).orElse(id.toString())
+                );
+                s.setUpdatedByName(name);
+            }
+        });
+    }
+
     @PostMapping
     @RequireDeptPermission(resource = ResourceCode.CAPITAL_PARTNER, action = ActionCode.CREATE)
     @Operation(summary = "Thêm chữ ký/mẫu dấu cho đối tác")
@@ -49,6 +66,7 @@ public class PartnerSignatureController {
             Authentication auth) {
         UUID updaterId = getUserIdFromAuth(auth);
         PartnerSignature created = partnerService.createSignature(partnerId, signature, updaterId);
+        populateUserNames(java.util.Collections.singletonList(created));
         return ResponseEntity.ok(ApiResponse.success(created));
     }
 
@@ -61,6 +79,7 @@ public class PartnerSignatureController {
             @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
         Page<PartnerSignature> signaturePage = partnerService.getSignaturesByPartnerId(partnerId, pageable);
+        populateUserNames(signaturePage.getContent());
 
         PagedResponse<PartnerSignature> pagedResponse = PagedResponse.<PartnerSignature>builder()
                 .content(signaturePage.getContent())
@@ -84,6 +103,7 @@ public class PartnerSignatureController {
             Authentication auth) {
         UUID updaterId = getUserIdFromAuth(auth);
         PartnerSignature updated = partnerService.updateSignature(partnerId, signatureId, updateRequest, updaterId);
+        populateUserNames(java.util.Collections.singletonList(updated));
         return ResponseEntity.ok(ApiResponse.success(updated));
     }
 

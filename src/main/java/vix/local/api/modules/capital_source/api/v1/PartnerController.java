@@ -111,6 +111,17 @@ public class PartnerController {
         return ResponseEntity.ok(ApiResponse.success(pagedResponse));
     }
 
+    @GetMapping("/check-duplicate")
+    @RequireDeptPermission(resource = ResourceCode.CAPITAL_PARTNER, action = ActionCode.VIEW)
+    @Operation(summary = "Kiểm tra trùng lặp Mã KH hoặc Mã đơn vị GD")
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> checkDuplicate(
+            @RequestParam(required = false) String cusId,
+            @RequestParam(required = false) String branchCusId,
+            @RequestParam(required = false) UUID excludeId) {
+        java.util.Map<String, Object> result = partnerService.checkDuplicate(cusId, branchCusId, excludeId);
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
     @PostMapping
     @RequireDeptPermission(resource = ResourceCode.CAPITAL_PARTNER, action = ActionCode.CREATE)
     @Operation(summary = "Thêm mới đối tác")

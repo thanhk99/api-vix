@@ -22,6 +22,7 @@ public class PartnerSignature {
     private LocalDate expiryDate;
     private String status;
     private UUID updatedBy;
+    private String updatedByName;
     private java.time.LocalDateTime createdAt;
     private java.time.LocalDateTime updatedAt;
 
@@ -29,8 +30,8 @@ public class PartnerSignature {
         if (this.effectiveDate == null) {
             throw new PartnerSignatureException("Ngày hiệu lực không được để trống");
         }
-        if (this.expiryDate != null && this.effectiveDate.isAfter(this.expiryDate)) {
-            throw new PartnerSignatureException("Ngày kết thúc phải sau ngày bắt đầu");
+        if (this.expiryDate != null && !this.expiryDate.isAfter(this.effectiveDate)) {
+            throw new PartnerSignatureException("Ngày hết hạn phải lớn hơn ngày hiệu lực");
         }
     }
 

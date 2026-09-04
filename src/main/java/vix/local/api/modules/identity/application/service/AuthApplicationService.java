@@ -83,7 +83,7 @@ public class AuthApplicationService implements AuthPort {
         if (user.getDepartmentRole() == UserRole.DIRECTOR) {
             // Giám đốc: không gắn phòng ban cụ thể, token không có deptId
             token = jwtUtil.generateAccessToken(user.getId(), user.getEmail(), roles, null, "shared");
-            route = "director";
+            route = "bgd";
         } else if (user.getDepartmentId() != null) {
             HrDepartment hrDept = hrDepartmentRepository.findById(user.getDepartmentId()).orElse(null);
             if (hrDept != null) {

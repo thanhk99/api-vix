@@ -39,6 +39,30 @@ public class PartnerRepositoryImpl implements PartnerRepository {
         partnerJpaRepository.deleteById(id);
     }
     
+    @Override
+    public boolean existsByCusId(String cusId) {
+        if (cusId == null || cusId.trim().isEmpty()) return false;
+        return partnerJpaRepository.existsByCusIdIgnoreCase(cusId.trim());
+    }
+
+    @Override
+    public boolean existsByCusIdAndIdNot(String cusId, UUID id) {
+        if (cusId == null || cusId.trim().isEmpty() || id == null) return false;
+        return partnerJpaRepository.existsByCusIdIgnoreCaseAndIdNot(cusId.trim(), id);
+    }
+
+    @Override
+    public boolean existsByBranchCusId(String branchCusId) {
+        if (branchCusId == null || branchCusId.trim().isEmpty()) return false;
+        return partnerJpaRepository.existsByBranchCusIdIgnoreCase(branchCusId.trim());
+    }
+
+    @Override
+    public boolean existsByBranchCusIdAndIdNot(String branchCusId, UUID id) {
+        if (branchCusId == null || branchCusId.trim().isEmpty() || id == null) return false;
+        return partnerJpaRepository.existsByBranchCusIdIgnoreCaseAndIdNot(branchCusId.trim(), id);
+    }
+    
     private PartnerEntity convertToEntity(Partner partner) {
         PartnerEntity entity = new PartnerEntity();
         entity.setId(partner.getId());

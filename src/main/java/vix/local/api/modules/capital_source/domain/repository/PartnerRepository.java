@@ -10,4 +10,8 @@ public interface PartnerRepository {
     Partner findById(UUID id);
     Page<Partner> findAll(Pageable pageable);
     void deleteById(UUID id);
+    boolean existsByCusId(String cusId);
+    boolean existsByCusIdAndIdNot(String cusId, UUID id);
+    boolean existsByBranchCusId(String branchCusId);
+    boolean existsByBranchCusIdAndIdNot(String branchCusId, UUID id);
 }

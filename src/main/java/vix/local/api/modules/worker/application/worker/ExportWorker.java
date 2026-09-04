@@ -192,7 +192,11 @@ public class ExportWorker {
 
                 // 6: Ngày cấp cuối
                 Cell c6 = row.createCell(6);
-                c6.setCellValue(formatDate(p.getLastIssueDate()));
+                LocalDate lastIssue = p.getLastIssueDate();
+                if (lastIssue == null && (p.getChangeCount() == null || p.getChangeCount() == 0)) {
+                    lastIssue = p.getFistIssueDate();
+                }
+                c6.setCellValue(formatDate(lastIssue));
                 c6.setCellStyle(centerStyle);
 
                 // 7: Nơi cấp

@@ -37,6 +37,23 @@ public class PartnerSealController {
         return null;
     }
 
+    private void populateUserNames(java.util.List<PartnerSeal> seals) {
+        if (seals == null || seals.isEmpty()) return;
+        java.util.Map<UUID, String> cache = new java.util.HashMap<>();
+        seals.forEach(s -> {
+            if (s.getUpdatedBy() != null) {
+                String name = cache.computeIfAbsent(s.getUpdatedBy(), id -> 
+                    userRepository.findById(id).map(u -> 
+                        (u.getFullName() != null && !u.getFullName().trim().isEmpty()) 
+                            ? u.getFullName() 
+                            : (u.getEmail() != null ? u.getEmail() : id.toString())
+                    ).orElse(id.toString())
+                );
+                s.setUpdatedByName(name);
+            }
+        });
+    }
+
     @PostMapping
     @RequireDeptPermission(resource = ResourceCode.CAPITAL_PARTNER, action = ActionCode.CREATE)
     @Operation(summary = "Thêm mẫu dấu cho đối tác")
@@ -46,6 +63,7 @@ public class PartnerSealController {
             Authentication auth) {
         UUID updaterId = getUserIdFromAuth(auth);
         PartnerSeal created = partnerSealService.createSeal(partnerId, seal, updaterId);
+        populateUserNames(java.util.Collections.singletonList(created));
         return ResponseEntity.ok(ApiResponse.success(created));
     }
 
@@ -58,6 +76,7 @@ public class PartnerSealController {
             @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
         Page<PartnerSeal> sealPage = partnerSealService.getSealsByPartnerId(partnerId, pageable);
+        populateUserNames(sealPage.getContent());
 
         PagedResponse<PartnerSeal> pagedResponse = PagedResponse.<PartnerSeal>builder()
                 .content(sealPage.getContent())
@@ -81,6 +100,7 @@ public class PartnerSealController {
             Authentication auth) {
         UUID updaterId = getUserIdFromAuth(auth);
         PartnerSeal updated = partnerSealService.updateSeal(partnerId, sealId, updateRequest, updaterId);
+        populateUserNames(java.util.Collections.singletonList(updated));
         return ResponseEntity.ok(ApiResponse.success(updated));
     }
 
